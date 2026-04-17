@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
+/* DESIGN SYSTEM (UPDATED - SESUAI TEMAN) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #22D3EE;      /* cyan-400 */
+  --color-secondary: #101935;    /* card utama */
+  --color-tertiary: #081028;     /* inner card */
+  --color-background: #020617;   /* background utama */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* BASE STYLE */
+@layer base {
+  * {
+    @apply border-white/10;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    color: white;
+    background-color: var(--color-background);
+  }
 }
