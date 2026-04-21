@@ -79,3 +79,24 @@ body {
 }
 
 .animate-fadeInUp { animation: fadeInUp 0.35s ease forwards; }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #081028;
+  color: white;
+  font-family: Inter, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.card {
+  background: #101935;
+  border-radius: 20px;
+}
