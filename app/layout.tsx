@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 
@@ -14,9 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full font-sans text-white">
