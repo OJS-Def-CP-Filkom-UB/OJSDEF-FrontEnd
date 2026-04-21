@@ -1,90 +1,62 @@
 "use client";
 
+import React from "react";
+import { 
+  Bell, 
+  HelpCircle, 
+  Search,
+  Command,
+  Plus
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
 export default function Topbar() {
   return (
-    <header
-      style={{
-        height: 56,
-        background: "var(--bg-sidebar)",
-        borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 28px",
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-      }}
-    >
-      <span
-        style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: "var(--accent-cyan)",
-          letterSpacing: "0.03em",
-        }}
-      >
-        OJS Integrated Security
-      </span>
+    <header className="h-16 border-b border-border bg-slate-950/50 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between">
+      <div className="flex items-center gap-8 flex-1">
+        <div className="flex items-center gap-2 text-primary opacity-80 uppercase text-[10px] font-black tracking-[0.2em]">
+          <span>Security Protocol v4.2.0</span>
+          <div className="w-1 h-1 rounded-full bg-primary" />
+          <span className="text-muted-foreground font-bold">Operational</span>
+        </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {/* Bell */}
-        <button
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: "var(--text-secondary)",
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 16a2 2 0 002-2H6a2 2 0 002 2zm.995-14.901a1 1 0 10-1.99 0A5.002 5.002 0 003 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z" />
-          </svg>
-        </button>
+        <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/5 px-4 h-10 rounded-xl w-96 group hover:border-white/10 transition-all cursor-text">
+          <Search size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          <span className="text-xs text-muted-foreground flex-1 font-medium">Search Intelligence logs...</span>
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[10px] font-mono text-muted-foreground">
+            <Command size={10} />
+            <span>K</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Help */}
-        <button
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: "var(--text-secondary)",
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M5.255 5.786a.237.237 0 00.241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 00.25.246h.811a.25.25 0 00.25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z" />
-          </svg>
-        </button>
+      <div className="flex items-center gap-4">
+        <Badge variant="outline" className="hidden lg:flex bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold gap-1.5 px-3 h-8">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Systems Normal
+        </Badge>
 
-        {/* Avatar */}
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg,#667eea,#764ba2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: "pointer",
-            color: "#fff",
-          }}
-        >
-          OJ
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-muted-foreground hover:text-white hover:bg-white/5 relative">
+            <Bell size={20} />
+            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-slate-950" />
+          </Button>
+          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-muted-foreground hover:text-white hover:bg-white/5">
+            <HelpCircle size={20} />
+          </Button>
+        </div>
+
+        <div className="h-8 w-[1px] bg-white/5 mx-2" />
+
+        <div className="flex items-center gap-3 pl-2">
+          <div className="flex flex-col items-end hidden sm:block">
+            <span className="text-xs font-bold text-white leading-none">Admin_Level_01</span>
+            <span className="text-[10px] text-primary font-bold uppercase tracking-widest mt-1">Superuser</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm shadow-lg shadow-primary/5">
+            AD
+          </div>
         </div>
       </div>
     </header>
