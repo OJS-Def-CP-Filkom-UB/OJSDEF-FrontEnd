@@ -12,7 +12,9 @@ import {
   Plus, 
   CheckCircle2,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Terminal,
+  Activity
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +22,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -34,7 +36,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   targetName: z.string().min(2, "Target name is required"),
@@ -61,191 +62,195 @@ export default function AddTargetPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12">
+    <div className="max-w-4xl mx-auto space-y-12 pb-20">
       {/* HEADER SECTION */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 text-primary">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Plus size={18} />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Asset provisioning</span>
-        </div>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white leading-tight">
-          Initialize New <br/> Security Perimeter
-        </h1>
-        <p className="text-muted-foreground font-medium text-lg max-w-2xl">
-          Register a new target for deep autonomous scanning. Our engine will map endpoints and identify vulnerabilities in real-time.
-        </p>
+      <div className="text-center md:text-left space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3 justify-center md:justify-start"
+        >
+          <Badge variant="cyber" className="h-6 px-3 tracking-[0.2em] uppercase text-[9px] font-black">
+            Asset Provisioning
+          </Badge>
+          <div className="h-px bg-white/5 flex-1 hidden md:block" />
+        </motion.div>
+        
+        <motion.h1 
+          className="text-5xl font-black tracking-tighter text-white"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          Initialize <span className="text-secondary">Probe</span>
+        </motion.h1>
+        <motion.p 
+          className="text-muted-foreground text-lg font-medium max-w-xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          Deploy our proprietary scanning engine to identify threat vectors across your infrastructure.
+        </motion.p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* LEFT COLUMN: CORE INFO */}
-            <div className="lg:col-span-7 space-y-8">
-              <Card className="border-border bg-slate-900/40 backdrop-blur-sm p-8 shadow-xl">
-                 <CardHeader className="p-0 mb-8 flex flex-row items-center justify-between">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Core Identification */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="glass border-none h-full relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                   <Terminal size={40} />
+                 </div>
+                 <CardContent className="p-8 space-y-8">
                    <div className="space-y-1">
-                     <CardTitle className="text-xl font-bold flex items-center gap-2 text-white">
-                       <Shield size={20} className="text-primary" /> Target Credentials
-                     </CardTitle>
-                     <CardDescription className="text-xs uppercase font-bold tracking-widest">Identify the asset for analysis</CardDescription>
+                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                       <Shield size={18} className="text-primary" /> Target ID
+                     </h3>
+                     <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Identification module</p>
                    </div>
-                   <Badge variant="outline" className="bg-white/5 border-white/10 text-primary font-bold px-3">STEP 1/2</Badge>
-                 </CardHeader>
-                 
-                 <CardContent className="p-0 space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="targetName"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel className="text-xs font-bold uppercase tracking-widest text-white/70">Project / Asset Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Customer Portal Production" className="h-12 bg-white/5 border-white/10 rounded-xl px-4 text-white focus:border-primary/50 transition-all font-medium" {...field} />
-                          </FormControl>
-                          <FormMessage className="text-[11px] font-bold" />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="targetUrl"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel className="text-xs font-bold uppercase tracking-widest text-white/70">Target Endpoint URL</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                               <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                               <Input placeholder="https://api.sentinel-core.infra" className="h-12 bg-white/5 border-white/10 rounded-xl pl-12 pr-4 text-white focus:border-primary/50 transition-all font-medium" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormDescription className="text-[10px] text-muted-foreground/60 font-semibold px-1 italic">
-                            Ensuring connection via secure protocols (HTTPS) is highly recommended.
-                          </FormDescription>
-                          <FormMessage className="text-[11px] font-bold" />
-                        </FormItem>
-                      )}
-                    />
+                   <div className="space-y-6">
+                     <FormField
+                       control={form.control}
+                       name="targetName"
+                       render={({ field }) => (
+                         <FormItem className="space-y-2">
+                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-1">Label Name</FormLabel>
+                           <FormControl>
+                             <Input placeholder="PROD_GATEWAY_V2" className="h-12 bg-white/3 border-white/5 rounded-2xl px-5 text-sm font-mono focus:border-secondary/30 focus:ring-0 placeholder:text-muted-foreground/30" {...field} />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+
+                     <FormField
+                       control={form.control}
+                       name="targetUrl"
+                       render={({ field }) => (
+                         <FormItem className="space-y-2">
+                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-1">Endpoint URL</FormLabel>
+                           <FormControl>
+                             <div className="relative group/input">
+                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/input:text-secondary transition-colors" />
+                                <Input placeholder="https://..." className="h-12 bg-white/3 border-white/5 rounded-2xl pl-12 pr-5 text-sm font-mono focus:border-secondary/30 focus:ring-0 placeholder:text-muted-foreground/30" {...field} />
+                             </div>
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                   </div>
                  </CardContent>
               </Card>
+            </motion.div>
 
-              {/* SCAN CONFIGURATION */}
-              <Card className="border-border bg-slate-900/40 backdrop-blur-sm p-8 shadow-xl">
-                 <CardHeader className="p-0 mb-8 flex flex-row items-center justify-between">
-                   <div className="space-y-1">
-                     <CardTitle className="text-xl font-bold flex items-center gap-2 text-white">
-                       <Zap size={20} className="text-primary" /> Intelligence Profile
-                     </CardTitle>
-                     <CardDescription className="text-xs uppercase font-bold tracking-widest">Select scan depth and frequency</CardDescription>
-                   </div>
-                   <Badge variant="outline" className="bg-white/5 border-white/10 text-primary font-bold px-3">STEP 2/2</Badge>
-                 </CardHeader>
-                 
-                 <CardContent className="p-0">
-                    <FormField
-                      control={form.control}
-                      name="scanType"
-                      render={({ field }) => (
-                        <FormItem className="space-y-6">
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                            >
-                              {[
-                                { id: "quick", title: "Quick Pulse", desc: "Top 10 OWASP & SSL checks", time: "~5m" },
-                                { id: "full", title: "Normal Audit", desc: "Deep crawling & IDOR scan", time: "~25m" },
-                                { id: "deep", title: "Chaos Mode", desc: "Full fuzzing & CVE probes", time: "~2h" },
-                                { id: "compliance", title: "Compliance", desc: "PCI-DSS / SOC2 Audit", time: "~4h" },
-                              ].map((type) => (
-                                <FormItem key={type.id} className="space-y-0">
-                                  <FormControl>
-                                    <RadioGroupItem
-                                      value={type.id}
-                                      className="peer sr-only"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="flex flex-col h-full border border-white/5 bg-white/5 rounded-2xl p-4 cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:bg-white/10 transition-all group relative overflow-hidden">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <span className="text-sm font-bold text-white group-peer-data-[state=checked]:text-primary transition-colors">{type.title}</span>
-                                      <span className="text-[10px] font-black font-mono text-muted-foreground">{type.time}</span>
-                                    </div>
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">{type.desc}</p>
-                                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary/10 rounded-full scale-0 group-peer-data-[state=checked]:scale-150 transition-transform duration-500" />
-                                  </FormLabel>
-                                </FormItem>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                 </CardContent>
-              </Card>
-            </div>
-
-            {/* RIGHT COLUMN: SUMMARY & TIPS */}
-            <div className="lg:col-span-5 space-y-6">
-               <Card className="border-border bg-slate-900/40 backdrop-blur-sm p-6 overflow-hidden relative border-l-4 border-l-primary">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                  <div className="flex items-center gap-3 mb-6 relative z-10">
-                    <Info size={18} className="text-primary" />
-                    <CardTitle className="text-md font-bold text-white uppercase tracking-tight">Deployment Policy</CardTitle>
-                  </div>
-                  
-                  <div className="space-y-6 relative z-10">
-                     <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                           <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                              <CheckCircle2 size={16} />
-                           </div>
-                           <div>
-                              <p className="text-sm font-bold text-white">Authorized Scan Only</p>
-                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Ensure you have explicit written permission to scan the target infrastructure. Autonomous probing can be resource-intensive.</p>
-                           </div>
+            {/* Quick Policy Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+               <Card className="glass-dark border-none h-full relative overflow-hidden flex flex-col justify-between">
+                  <CardContent className="p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-white/40 mb-4">Security Policy Compliance</h3>
+                    
+                    <div className="space-y-6">
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                          <CheckCircle2 size={18} />
                         </div>
-
-                        <div className="flex items-start gap-4">
-                           <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
-                              <Lock size={16} />
-                           </div>
-                           <div>
-                              <p className="text-sm font-bold text-white">Encryption Verified</p>
-                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">All telemetry data from this probe will be encrypted with your enterprise RSA master key before storage.</p>
-                           </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Authorization Verified</p>
+                          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">System confirms that current user holds 'Security_Lead' status for asset registration.</p>
                         </div>
-                     </div>
+                      </div>
 
-                     <div className="pt-6 border-t border-white/5">
-                        <Button type="submit" onClick={form.handleSubmit(onSubmit)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 gap-3 group">
-                           Initialize Probe <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                        <p className="text-center text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-4">Average launch time: 4.2 seconds</p>
-                     </div>
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <Lock size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Advanced Encrypt</p>
+                          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Probe results will be zero-knowledge encrypted via RSA-4096 before persisting.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+
+                  <div className="p-8 border-t border-white/5 bg-secondary/5">
+                    <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-[0_0_30px_rgba(0,230,153,0.15)] group relative overflow-hidden">
+                       <span className="relative z-10 flex items-center gap-3">
+                         Launch Scanning Engine <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                       </span>
+                    </Button>
+                    <p className="text-center text-[9px] text-muted-foreground/40 font-black tracking-widest mt-4 uppercase">System Status: Nominal</p>
                   </div>
                </Card>
-
-               {/* RECENT TEMPLATES (MOCK) */}
-               <div className="px-4">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">Saved Profiles</p>
-                  <div className="space-y-3">
-                     {["Production_Cluster_Standard", "Staging_Health_Probe", "Daily_OWASP_Check"].map((item, i) => (
-                       <button key={i} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all text-left group">
-                          <div className="flex items-center gap-3">
-                             <Server size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                             <span className="text-xs font-bold text-white/70">{item}</span>
-                          </div>
-                          <ChevronRight size={14} className="text-muted-foreground" />
-                       </button>
-                     ))}
-                  </div>
-               </div>
-            </div>
+            </motion.div>
           </div>
+
+          {/* Intelligence Depth (Scan Types) */}
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center gap-3">
+                <Activity size={20} className="text-secondary" /> Intelligence Depth
+              </h3>
+              <Badge variant="outline" className="border-white/5 text-muted-foreground font-mono">STEP_02//CONF</Badge>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="scanType"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                    >
+                      {[
+                        { id: "quick", title: "QUICK_PULSE", desc: "Top 10 OWASP & SSL check", time: "5M", icon: Zap },
+                        { id: "full", title: "NOMINAL_AUDIT", desc: "IDOR & Component scan", time: "25M", icon: Server },
+                        { id: "deep", title: "CHAOS_MODE", desc: "Fuzzing & Payload inject", time: "2H", icon: Cpu },
+                        { id: "compliance", title: "NIST_PROTO", desc: "Full industry audit", time: "4H", icon: Shield },
+                      ].map((type) => (
+                        <FormItem key={type.id} className="space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={type.id} className="peer sr-only" />
+                          </FormControl>
+                          <FormLabel className="flex flex-col h-full glass-dark rounded-2xl p-6 cursor-pointer border border-transparent peer-data-[state=checked]:border-secondary peer-data-[state=checked]:bg-secondary/5 hover:border-white/10 transition-all group relative overflow-hidden">
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="w-10 h-10 rounded-xl bg-white/3 flex items-center justify-center text-muted-foreground group-peer-data-[state=checked]:text-secondary transition-colors">
+                                <type.icon size={20} />
+                              </div>
+                              <span className="text-[10px] font-black font-mono text-muted-foreground bg-white/5 px-2 py-1 rounded">{type.time}</span>
+                            </div>
+                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white group-peer-data-[state=checked]:text-secondary transition-colors mb-2 block">{type.title}</span>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed font-semibold uppercase tracking-wider">{type.desc}</p>
+                            
+                            <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-secondary scale-0 group-peer-data-[state=checked]:scale-100 transition-transform" />
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </motion.div>
         </form>
       </Form>
     </div>

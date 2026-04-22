@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Activity, 
   Terminal, 
@@ -11,24 +11,25 @@ import {
   CheckCircle2,
   Cpu,
   Globe,
-  Loader2
+  Loader2,
+  Radio,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_SCAN_LOGS } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const LOG_COLOR_MAP: Record<string, string> = {
-  INFO: "text-blue-400",
-  DONE: "text-emerald-400",
-  TASK: "text-amber-400",
-  EXEC: "text-cyan-400",
-  WARN: "text-rose-400",
+  INFO: "text-primary/70",
+  DONE: "text-secondary",
+  TASK: "text-warning",
+  EXEC: "text-primary",
+  WARN: "text-destructive",
 };
 
 export default function ScanningPage() {
@@ -41,15 +42,14 @@ export default function ScanningPage() {
   const logRef = useRef<HTMLDivElement>(null);
   const logIndexRef = useRef(0);
 
-  // Simulation parameters
-  const ESTIMATED_TOTAL = 180; // 3 minutes
+  const ESTIMATED_TOTAL = 300; 
 
   useEffect(() => {
     const timerId = setInterval(() => {
       setElapsed(prev => prev + 1);
       setProgress(prev => {
         if (prev >= 99) return 99;
-        const inc = prev < 30 ? 0.8 : prev < 60 ? 0.4 : prev < 85 ? 0.2 : 0.05;
+        const inc = prev < 20 ? 1.2 : prev < 50 ? 0.6 : prev < 80 ? 0.2 : 0.02;
         return Math.min(99, parseFloat((prev + inc).toFixed(2)));
       });
     }, 1000);
@@ -63,12 +63,11 @@ export default function ScanningPage() {
         setVisibleLogs(prev => [...prev, { ...MOCK_SCAN_LOGS[idx], time: timeStr }]);
         logIndexRef.current = idx + 1;
         
-        // Randomly increase threats found
-        if (MOCK_SCAN_LOGS[idx].type === "WARN" || (MOCK_SCAN_LOGS[idx].type === "EXEC" && Math.random() > 0.7)) {
+        if (MOCK_SCAN_LOGS[idx].type === "WARN" || (MOCK_SCAN_LOGS[idx].type === "EXEC" && Math.random() > 0.8)) {
           setThreats(t => t + 1);
         }
       }
-    }, 2500);
+    }, 2000);
 
     return () => {
       clearInterval(timerId);
@@ -91,179 +90,221 @@ export default function ScanningPage() {
   const remaining = Math.max(0, ESTIMATED_TOTAL - elapsed);
 
   return (
-    <div className="space-y-8">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-4">
+    <div className="space-y-8 pb-10">
+      {/* OPERATION STATUS BAR */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="flex items-center gap-5">
           <div className="relative">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/10">
-              <Activity size={24} className="animate-pulse" />
+            <div className="w-14 h-14 rounded-2xl glass-dark flex items-center justify-center text-primary shadow-[0_0_30px_rgba(6,182,212,0.15)] overflow-hidden">
+               <motion.div
+                 animate={{ opacity: [0.4, 1, 0.4] }}
+                 transition={{ duration: 2, repeat: Infinity }}
+               >
+                 <Activity size={28} />
+               </motion.div>
+               <div className="absolute inset-0 bg-primary/5 animate-pulse" />
             </div>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-bold tracking-widest px-2 h-5">
-                Live Operation
+            <div className="flex items-center gap-3 mb-1">
+              <Badge variant="cyber" className="h-5 px-2 text-[9px] tracking-[0.15em] font-black uppercase">
+                Operation Alpha-7
               </Badge>
-              <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">ID: SCAN-7729110</span>
+              <span className="text-[10px] font-mono text-muted-foreground/60 uppercase">Runtime: {formatTime(elapsed)}</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Active Vulnerability Scan</h1>
+            <h1 className="text-3xl font-black tracking-tighter text-white">Security Vulnerability <span className="text-primary">Extraction</span></h1>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => router.push("/dashboard")}
-          className="rounded-xl border-destructive/20 bg-destructive/5 text-destructive font-bold gap-2 hover:bg-destructive/10 h-12 px-6"
-        >
-          <XCircle size={18} /> Abort Operation
-        </Button>
-      </div>
-
-      {/* MAIN CONTENT GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* PROGRESS CARD */}
-        <Card className="lg:col-span-5 border-border bg-slate-900/40 backdrop-blur-sm p-8 flex flex-col items-center justify-between min-h-[450px]">
-          <div className="w-full">
-             <CardDescription className="text-xs uppercase font-bold tracking-widest text-primary/70 mb-2">Engine Progress</CardDescription>
-             <h2 className="text-sm font-bold text-white/60 mb-8 flex items-center gap-2">
-               <Globe size={14} className="text-primary" /> Target: api.sentinel-core.infra
-             </h2>
-          </div>
-
-          <div className="relative w-56 h-56">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle className="text-white/5 stroke-current" strokeWidth="8" fill="transparent" r="44" cx="50" cy="50" />
-              <motion.circle 
-                className="text-primary stroke-current" 
-                strokeWidth="8" 
-                strokeLinecap="round" 
-                fill="transparent" 
-                r="44" 
-                cx="50" 
-                cy="50" 
-                strokeDasharray="276.46"
-                initial={{ strokeDashoffset: 276.46 }}
-                animate={{ strokeDashoffset: 276.46 - (progress / 100) * 276.46 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-5xl font-bold text-white tracking-tighter">{Math.round(progress)}</span>
-                <span className="text-xl font-medium text-white/40">%</span>
-              </div>
-              <span className="text-[10px] text-primary/80 font-bold uppercase tracking-[0.2em] mt-2">Scanning Phase</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 w-full mt-10 pt-8 border-t border-border">
-            <div className="text-center">
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-2">Elapsed</p>
-              <p className="text-xl font-bold font-mono text-white">{formatTime(elapsed)}</p>
-            </div>
-            <div className="text-center border-x border-border px-4">
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-2">Threats</p>
-              <p className={cn("text-xl font-bold font-mono", threats > 0 ? "text-destructive" : "text-emerald-500")}>
-                {String(threats).padStart(2, "0")}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-2">Est. Left</p>
-              <p className="text-xl font-bold font-mono text-white">~{formatTime(remaining)}</p>
-            </div>
-          </div>
-        </Card>
-
-        {/* LOG FEED CARD */}
-        <Card className="lg:col-span-7 border-border bg-slate-900/40 backdrop-blur-sm flex flex-col h-[450px]">
-          <CardHeader className="pb-4 shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Terminal size={18} className="text-primary" />
-                <CardTitle className="text-lg font-bold">Engine Telemetry Feed</CardTitle>
-              </div>
-              <Badge variant="secondary" className="bg-white/5 text-primary text-[10px] font-bold tracking-widest font-mono">
-                DAEMON_ACTIVE
-              </Badge>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="flex-1 flex flex-col min-h-0">
-            <div className="flex gap-4 mb-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-400" /> INFO</div>
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> DONE</div>
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> TASK</div>
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-400" /> WARN</div>
-            </div>
-
-            <div 
-              ref={logRef}
-              className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 overflow-y-auto font-mono text-[11px] leading-relaxed scrollbar-thin scrollbar-thumb-white/10"
-            >
-              <AnimatePresence mode="popLayout">
-                {visibleLogs.length === 0 && (
-                  <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
-                    <Loader2 size={12} className="animate-spin" />
-                    Initializing engine components...
-                  </div>
-                )}
-                {visibleLogs.map((log, i) => (
-                  <motion.div 
-                    key={`${log.time}-${i}`} 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={cn(
-                      "py-1.5 flex gap-3 border-l-2 pl-4 mb-1",
-                      i === visibleLogs.length - 1 ? "bg-primary/5 border-primary" : "border-transparent"
-                    )}
-                  >
-                    <span className="text-white/20 whitespace-nowrap">[{log.time}]</span>
-                    <span className={cn("font-bold min-w-[45px]", LOG_COLOR_MAP[log.type] || "text-white/40")}>{log.type}</span>
-                    <span className="text-white/80">{log.msg}</span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              <div className="w-2 h-4 bg-primary inline-block ml-1 align-middle animate-pulse" />
-            </div>
-
-            <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between shrink-0">
-               <div className="flex items-center gap-3">
-                 <div className="relative">
-                   <Cpu size={16} className="text-primary" />
-                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
-                 </div>
-                 <span className="text-xs font-bold text-white/60">Processing Neural Patterns</span>
-               </div>
-               <div className="text-[11px] font-bold font-mono text-primary">
-                 THROUGHPUT: 1,402 PPS
-               </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <Button 
+            variant="outline"
+            className="flex-1 lg:flex-none border-white/5 bg-white/2 text-xs font-black uppercase tracking-widest px-6 h-12 rounded-2xl hover:bg-white/5"
+          >
+            Download Interim_Rep
+          </Button>
+          <Button 
+            variant="destructive"
+            onClick={() => router.push("/dashboard")}
+            className="flex-1 lg:flex-none bg-destructive/10 text-destructive border-destructive/20 font-black uppercase text-xs tracking-widest px-6 h-12 rounded-2xl hover:bg-destructive/20 shadow-[0_0_30px_rgba(255,77,77,0.1)] gap-2"
+          >
+            <XCircle size={16} /> Terminate_Engine
+          </Button>
+        </div>
       </div>
 
-      {/* QUICK STATUS BAR */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { icon: ShieldAlert, label: "Vulnerabilities", value: threats, sub: "Critical Issues", color: "text-rose-500", bg: "bg-rose-500/10" },
-          { icon: Globe, label: "Endpoints", value: "1,240", sub: "Discovered", color: "text-blue-500", bg: "bg-blue-500/10" },
-          { icon: Activity, label: "Scan Speed", value: "Medium", sub: "Deep Analysis", color: "text-primary", bg: "bg-primary/10" },
-          { icon: CheckCircle2, label: "Confidence", value: "98.2%", sub: "Accuracy Index", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-        ].map((item, i) => (
-          <Card key={i} className="border-border bg-slate-900/40 backdrop-blur-sm p-4">
-             <div className="flex items-center gap-4">
-                <div className={cn("p-2 rounded-xl", item.bg, item.color)}>
-                  <item.icon size={20} />
-                </div>
-                <div>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{item.label}</p>
-                   <p className="text-lg font-bold text-white">{item.value}</p>
-                   <p className="text-[10px] font-medium text-muted-foreground/60">{item.sub}</p>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* CENTERPIECE: PROGRESS & STATS */}
+        <div className="lg:col-span-12 xl:col-span-4 space-y-8">
+          <Card className="glass-dark border-none min-h-[480px] flex flex-col items-center justify-center relative overflow-hidden group">
+             {/* Decorative Background Elements */}
+             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.05)_0%,transparent_70%)]" />
+             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.826 10.558c1.026.13 2.102-1.03 1.084-2.127-5.224-5.616-15.654-7.62-15.654-7.62-1.027.13-2.102 1.03-1.083 2.127 5.224 5.615 15.653 7.62 15.653 7.62zm-19.492 5.064c1.026.13 2.102-1.03 1.083-2.127C31.18 7.88 20.75 5.875 20.75 5.875c-1.026.13-2.102 1.03-1.083 2.128 5.223 5.615 15.652 7.62 15.652 7.62zm-19.49 5.063c1.027.13 2.103-1.03 1.084-2.127-5.224-5.615-15.654-7.62-15.654-7.62-1.027.13-2.102 1.03-1.083 2.128 5.224 5.615 15.653 7.62 15.653 7.62z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd' /%3E%3C/svg%3E")` }} />
+
+             <div className="relative z-10 w-full p-8 text-center space-y-12">
+               <div className="space-y-1">
+                 <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary/50">Core Engine Throughput</h2>
+                 <p className="text-[10px] font-mono text-muted-foreground/40 break-all uppercase">api.sentinel-core.infra.node_02</p>
+               </div>
+
+               <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+                 <svg className="w-full h-full -rotate-90 sm:scale-110" viewBox="0 0 100 100">
+                   <circle className="text-white/2 stroke-current" strokeWidth="4" fill="transparent" r="46" cx="50" cy="50" />
+                   {/* Background track gradient shadow */}
+                   <circle className="text-primary/5 stroke-current blur-sm" strokeWidth="8" fill="transparent" r="46" cx="50" cy="50" />
+                   
+                   <motion.circle 
+                     className="text-primary stroke-current" 
+                     strokeWidth="4" 
+                     strokeLinecap="round" 
+                     fill="transparent" 
+                     r="46" 
+                     cx="50" 
+                     cy="50" 
+                     initial={{ strokeDasharray: "0, 289" }}
+                     animate={{ strokeDasharray: `${(progress / 100) * 289}, 289` }}
+                     transition={{ duration: 1, ease: "circOut" }}
+                   />
+                 </svg>
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <motion.div
+                       initial={{ scale: 0.8, opacity: 0 }}
+                       animate={{ scale: 1, opacity: 1 }}
+                       className="flex items-baseline"
+                    >
+                      <span className="text-7xl font-black text-white text-glow-cyan leading-none">{Math.round(progress)}</span>
+                      <span className="text-xl font-black text-white/20 ml-1">%</span>
+                    </motion.div>
+                    <div className="flex items-center gap-1.5 mt-3">
+                      <div className="w-1 h-1 rounded-full bg-secondary animate-ping" />
+                      <span className="text-[9px] text-secondary font-black uppercase tracking-widest">Active_Probe</span>
+                    </div>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-white/2 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Threats</p>
+                    <p className={cn("text-2xl font-black font-mono", threats > 0 ? "text-destructive text-glow-red" : "text-secondary")}>
+                      {String(threats).padStart(2, "0")}
+                    </p>
+                 </div>
+                 <div className="bg-white/2 border border-white/5 rounded-2xl p-4">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Estimated</p>
+                    <p className="text-2xl font-black font-mono text-white">
+                      {formatTime(remaining)}
+                    </p>
+                 </div>
+               </div>
              </div>
+
+             <div className="absolute bottom-0 left-0 w-full h-1 bg-white/3">
+                <motion.div 
+                  className="h-full bg-primary shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                />
+             </div>
+          </Card>
+        </div>
+
+        {/* LOGS PANEL */}
+        <div className="lg:col-span-12 xl:col-span-8 space-y-8">
+           <Card className="glass border-none h-[480px] flex flex-col overflow-hidden">
+              <div className="px-8 py-5 border-b border-white/5 flex items-center justify-between bg-white/1">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <Terminal size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight">Engine_Telemetry</h3>
+                    <p className="text-[9px] font-mono text-muted-foreground/40 uppercase">Channel: Secure_PROB_001</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <div className="hidden md:flex gap-4">
+                    {["INFO", "DONE", "TASK", "EXEC", "WARN"].map(type => (
+                      <div key={type} className="flex items-center gap-1.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-crosshair">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", type === "INFO" ? "bg-primary/50" : type === "DONE" ? "bg-secondary" : type === "TASK" ? "bg-warning" : type === "EXEC" ? "bg-primary" : "bg-destructive")} />
+                        <span className="text-[9px] font-black font-mono text-white/40">{type}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Badge className="bg-secondary/10 text-secondary text-[9px] font-black border-0">SYSTEM_NOMINAL</Badge>
+                </div>
+              </div>
+
+              <CardContent className="flex-1 overflow-hidden p-0 relative">
+                <div 
+                  ref={logRef}
+                  className="absolute inset-0 p-8 overflow-y-auto font-mono text-[11px] space-y-1.5 scrollbar-thin scroll-smooth"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {visibleLogs.length === 0 && (
+                      <div className="flex items-center gap-3 text-muted-foreground/30 animate-pulse font-mono uppercase tracking-widest h-full justify-center">
+                        <Loader2 size={16} className="animate-spin" />
+                        Establishing Secure Tunnel...
+                      </div>
+                    )}
+                    {visibleLogs.map((log, i) => (
+                      <motion.div 
+                        key={`${log.time}-${i}`} 
+                        initial={{ opacity: 0, x: -5 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={cn(
+                          "flex gap-4 py-1 border-l pl-4 transition-all duration-300",
+                          i === visibleLogs.length - 1 ? "border-primary bg-primary/10 -ml-4 pl-8" : "border-white/5"
+                        )}
+                      >
+                         <span className="text-white/20 whitespace-nowrap">[{log.time}]</span>
+                         <span className={cn("font-black min-w-[40px] text-[10px]", LOG_COLOR_MAP[log.type])}>{log.type}</span>
+                         <span className="text-white/60 tracking-tight">{log.msg}</span>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <div className="h-4 w-2 bg-primary/60 inline-block align-middle animate-pulse ml-2" />
+                </div>
+              </CardContent>
+
+              <div className="px-8 py-5 border-t border-white/5 bg-white/1 flex items-center justify-between h-14">
+                 <div className="flex items-center gap-8">
+                   <div className="flex items-center gap-2">
+                     <Radio size={14} className="text-secondary animate-pulse" />
+                     <span className="text-[10px] font-black font-mono text-secondary uppercase tracking-widest">Network: 1,421 PPS</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <Cpu size={14} className="text-primary" />
+                     <span className="text-[10px] font-black font-mono text-primary/80 uppercase tracking-widest">CPU: 42.8%</span>
+                   </div>
+                 </div>
+                 <span className="text-[9px] font-black font-mono text-white/20 uppercase">Module: OJS_A_CORE_V1.0</span>
+              </div>
+           </Card>
+        </div>
+      </div>
+
+      {/* QUICK INSIGHTS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { icon: Zap, label: "Extraction Rate", value: "8.2 KB/s", color: "text-primary" },
+          { icon: ShieldAlert, label: "Critical Vects", value: threats, color: threats > 0 ? "text-destructive" : "text-white/40" },
+          { icon: Globe, label: "Mesh Discovered", value: "31 Nodes", color: "text-secondary" },
+          { icon: Clock, label: "ET_COMPLETION", value: formatTime(remaining), color: "text-white" },
+        ].map((item, i) => (
+          <Card key={i} className="glass-dark border-none h-24 relative overflow-hidden group">
+            <CardContent className="h-full p-0 flex items-center px-6 gap-5">
+               <div className={cn("w-10 h-10 rounded-xl bg-white/3 flex items-center justify-center transition-all group-hover:scale-110", item.color)}>
+                 <item.icon size={20} />
+               </div>
+               <div className="space-y-0.5">
+                  <p className="text-[9px] font-black font-mono text-muted-foreground/50 uppercase tracking-[0.2em]">{item.label}</p>
+                  <p className={cn("text-xl font-black font-mono", item.color)}>{item.value}</p>
+               </div>
+               <div className="absolute top-0 right-0 w-16 h-16 bg-white/1 rotate-45 translate-x-8 -translate-y-8" />
+            </CardContent>
           </Card>
         ))}
       </div>
