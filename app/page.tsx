@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -9,19 +9,21 @@ import {
   BadgeCheck,
   Zap,
   Puzzle,
-  ChevronRight,
   Activity,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
+  // STATE BARU: Buat ngelacak kartu mana yang lagi di-hover (Defaultnya di tengah)
+  const [hoveredPricing, setHoveredPricing] = useState("Cyber_Pro");
+
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30 font-sans overflow-x-hidden">
       {/* NAVBAR */}
       <header className="border-b border-white/5 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-full mx-auto h-20 px-8 flex items-center justify-between">
-          {/* LEFT */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(6,182,212,0.1)]">
               <Shield size={22} />
@@ -31,20 +33,15 @@ export default function LandingPage() {
             </span>
           </Link>
 
-          {/* CENTER */}
           <nav className="hidden md:flex justify-between gap-10 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-            <Link href="#" className="text-primary hover:text-white transition">Home</Link>
-            <Link href="#" className="hover:text-white transition">Features</Link>
-            <Link href="#" className="hover:text-white transition">Pricing</Link>
-            <Link href="#" className="hover:text-white transition">About</Link>
+            <Link href="/" className="text-primary hover:text-white transition">Home</Link>
+            <Link href="#features" className="hover:text-white transition">Features</Link>
+            <Link href="#pricing" className="hover:text-white transition">Pricing</Link>
+            <Link href="#about" className="hover:text-white transition">About</Link>
           </nav>
 
-          {/* RIGHT */}
           <div className="flex items-center gap-6">
-            <Link
-              href="/login"
-              className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-white transition"
-            >
+            <Link href="/login" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-white transition">
               Login
             </Link>
             <Button asChild className="rounded-2xl px-6 h-11 bg-primary text-primary-foreground font-black uppercase text-[10px] tracking-widest shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:scale-105 transition-transform">
@@ -54,18 +51,13 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <section className="relative pt-24 pb-32 overflow-hidden">
-        {/* Background Gradients */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] -z-10 animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] -z-10" />
 
         <div className="max-w-[1450px] mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-10 shadow-[0_0_20px_rgba(6,182,212,0.05)]">
                <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -92,17 +84,9 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* MOCKUP PREVIEW */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative lg:h-[600px] flex items-center justify-center"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }} className="relative lg:h-[600px] flex items-center justify-center">
             <div className="w-full aspect-16/10 rounded-[40px] border border-white/5 bg-slate-950/40 p-4 relative overflow-hidden backdrop-blur-sm group shadow-2xl">
               <div className="absolute inset-0 bg-linear-to-br from-primary/20 to-transparent opacity-30" />
-              
-              {/* Fake Dashboard UI elements */}
               <div className="relative h-full w-full rounded-[30px] border border-white/5 bg-slate-900/90 shadow-2xl overflow-hidden">
                 <div className="h-14 border-b border-white/5 bg-white/2 flex items-center px-8 justify-between">
                   <div className="flex items-center gap-2">
@@ -127,7 +111,6 @@ export default function LandingPage() {
                         </div>
                      </div>
                   </div>
-                  
                   <div className="grid grid-cols-2 gap-8">
                     <div className="h-32 bg-white/5 rounded-2xl border border-white/5 relative overflow-hidden">
                        <div className="absolute inset-0 bg-linear-to-tr from-primary/10 to-transparent" />
@@ -139,12 +122,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Animated Floating Badge */}
-              <motion.div 
-                animate={{ y: [0, -15, 0], rotate: [0, 2, 0] }} 
-                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                className="absolute top-1/3 -right-6 p-6 rounded-[30px] glass-dark border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-20"
-              >
+              <motion.div animate={{ y: [0, -15, 0], rotate: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }} className="absolute top-1/3 -right-6 p-6 rounded-[30px] glass-dark border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-20">
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shadow-[0_0_20px_rgba(0,230,153,0.2)]">
                     <BadgeCheck size={32} />
@@ -161,44 +139,92 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURES SECTION */}
-      <section className="py-32 relative">
+      <section id="features" className="py-32 relative">
         <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/5 to-transparent" />
         <div className="max-w-[1450px] mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <FeatureCard
-              icon={<Shield size={24} />}
-              title="Enterprise_Stability"
-              desc="Ensure continuous protection with our 99.9% uptime SLA, designed for mission-critical infrastructure."
+            <FeatureCard icon={<Shield size={24} />} title="Enterprise_Stability" desc="Ensure continuous protection with our 99.9% uptime SLA, designed for mission-critical infrastructure." delay={0.1} />
+            <FeatureCard icon={<Zap size={24} />} title="Rapid_Triage" desc="Speed up your security response with actionable insights and automated patching recommendations." delay={0.2} />
+            <FeatureCard icon={<Puzzle size={24} />} title="Neural_Integration" desc="Easy to set up and scale. Integrates effortlessly with existing CI/CD pipelines and deployment workflows." delay={0.3} />
+          </div>
+        </div>
+        <div className="absolute bottom-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/5 to-transparent" />
+      </section>
+
+      {/* PRICING SECTION - DENGAN INTERAKSI HOVER */}
+      <section id="pricing" className="py-32 relative overflow-hidden bg-slate-950/50">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[140px] -z-10" />
+
+        <div className="max-w-[1450px] mx-auto px-8">
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em] shadow-[0_0_20px_rgba(6,182,212,0.05)]"
+            >
+              <Zap size={14} /> Pricing_Protocol
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tighter uppercase text-white italic"
+            >
+              Flexible <span className="text-primary not-italic">Plans</span> <br/>
+              For Every Mission.
+            </motion.h2>
+          </div>
+
+          {/* onMouseLeave bikin nyala birunya balik ke Cyber_Pro kalau kursor keluar area harga */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8" onMouseLeave={() => setHoveredPricing("Cyber_Pro")}>
+            <PricingCard
+              title="Starter_Node"
+              price="$19"
+              period="/MONTH"
+              desc="Essential monitoring tools for small projects."
+              features={[
+                "Real-time vulnerability scan", 
+                "Basic threat analytics", 
+                "Weekly security reports"
+              ]}
+              isActive={hoveredPricing === "Starter_Node"}
+              onHover={() => setHoveredPricing("Starter_Node")}
               delay={0.1}
             />
-            <FeatureCard
-              icon={<Zap size={24} />}
-              title="Rapid_Triage"
-              desc="Speed up your security response with actionable insights and automated patching recommendations."
+            <PricingCard
+              title="Cyber_Pro"
+              price="$79"
+              period="/MONTH"
+              desc="Advanced security automation for growing teams."
+              features={[
+                "AI-powered threat detection", 
+                "Live risk monitoring", 
+                "Unlimited scan sessions"
+              ]}
+              isActive={hoveredPricing === "Cyber_Pro"}
+              onHover={() => setHoveredPricing("Cyber_Pro")}
               delay={0.2}
             />
-            <FeatureCard
-              icon={<Puzzle size={24} />}
-              title="Neural_Integration"
-              desc="Easy to set up and scale. Integrates effortlessly with existing CI/CD pipelines and deployment workflows."
+            <PricingCard
+              title="Enterprise_Core"
+              price="$199"
+              period="/MONTH"
+              desc="Enterprise-grade infrastructure protection."
+              features={[
+                "Dedicated security engine", 
+                "Unlimited organization nodes", 
+                "24/7 monitoring center"
+              ]}
+              isActive={hoveredPricing === "Enterprise_Core"}
+              onHover={() => setHoveredPricing("Enterprise_Core")}
               delay={0.3}
             />
           </div>
         </div>
-        <div className="absolute bottom-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/5 to-transparent" />
       </section>
 
       {/* CTA SECTION */}
       <section className="py-40 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.05)_0%,transparent_70%)]" />
         <div className="max-w-[1100px] mx-auto px-8 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="space-y-12"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="space-y-12">
             <h2 className="text-5xl md:text-8xl font-black leading-[0.9] text-white uppercase italic tracking-tighter">
               Ready to <span className="text-secondary not-italic">Bolster</span> <br/> Your Defense?
             </h2>
@@ -224,14 +250,12 @@ export default function LandingPage() {
               </div>
               <span className="text-xl font-black uppercase tracking-tighter text-white">OJS<span className="text-primary">Def</span></span>
             </Link>
-            
             <div className="flex flex-wrap gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
               <Link href="#" className="hover:text-primary transition-colors">Privacy_Prot</Link>
               <Link href="#" className="hover:text-primary transition-colors">Terms_Ops</Link>
               <Link href="#" className="hover:text-primary transition-colors">Intel_Sec</Link>
               <Link href="#" className="hover:text-primary transition-colors">Nodes_Status</Link>
             </div>
-
             <p className="text-[10px] font-black font-mono text-muted-foreground/20 uppercase tracking-widest">
               &copy; 2026 OJS_INTEGRATED_SECURITY_CO.
             </p>
@@ -242,16 +266,23 @@ export default function LandingPage() {
   );
 }
 
-function FeatureCard({
-  icon,
-  title,
-  desc,
-  delay
+{/* KOMPONEN KARTU FITUR */}
+function FeatureCard({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: number; }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay }} className="p-12 rounded-[40px] glass-dark border border-white/5 hover:border-primary/30 transition-all group relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity">{icon}</div>
+      <div className="w-16 h-16 rounded-[24px] bg-primary/10 text-primary flex items-center justify-center mb-12 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(6,182,212,0.1)] relative z-10">{icon}</div>
+      <h3 className="text-2xl font-black mb-6 group-hover:text-primary transition-colors uppercase tracking-tight text-white italic relative z-10">{title}</h3>
+      <p className="text-lg text-muted-foreground/60 leading-relaxed font-medium relative z-10">{desc}</p>
+    </motion.div>
+  );
+}
+
+{/* KOMPONEN KARTU HARGA DINAMIS */}
+function PricingCard({
+  title, price, period, desc, features, isActive, delay, onHover
 }: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  delay: number;
+  title: string; price: string; period: string; desc: string; features: string[]; isActive?: boolean; delay: number; onHover: () => void;
 }) {
   return (
     <motion.div
@@ -259,20 +290,39 @@ function FeatureCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
-      className="p-12 rounded-[40px] glass-dark border border-white/5 hover:border-primary/30 transition-all group relative overflow-hidden"
+      onMouseEnter={onHover} // INI KUNCI INTERAKSINYA
+      className={`p-10 rounded-[40px] glass-dark border cursor-pointer ${isActive ? 'border-primary/50 shadow-[0_0_40px_rgba(6,182,212,0.15)] bg-slate-900/60' : 'border-white/5'} relative overflow-hidden flex flex-col h-full hover:-translate-y-2 transition-all duration-500`}
     >
-      <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity">
-         {icon}
+      {/* Garis Nyala di Atas */}
+      {isActive && (
+        <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-primary to-transparent opacity-80" />
+      )}
+      
+      {/* Ikon Shield Kiri Atas */}
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 border transition-colors ${isActive ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-white/5 border-white/5 text-muted-foreground/40'}`}>
+        <Shield size={24} />
       </div>
-      <div className="w-16 h-16 rounded-[24px] bg-primary/10 text-primary flex items-center justify-center mb-12 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(6,182,212,0.1)] relative z-10">
-        {icon}
+
+      <h3 className={`text-2xl font-black uppercase tracking-tight mb-3 italic transition-colors ${isActive ? 'text-primary' : 'text-white'}`}>{title}</h3>
+      <p className="text-sm text-muted-foreground/60 font-medium mb-8 h-10">{desc}</p>
+
+      <div className="flex items-end gap-2 mb-10">
+        <span className="text-6xl font-black text-white leading-none tracking-tighter">{price}</span>
+        <span className="text-[10px] font-black text-muted-foreground/40 mb-2 uppercase tracking-widest">{period}</span>
       </div>
-      <h3 className="text-2xl font-black mb-6 group-hover:text-primary transition-colors uppercase tracking-tight text-white italic relative z-10">
-        {title}
-      </h3>
-      <p className="text-lg text-muted-foreground/60 leading-relaxed font-medium relative z-10">
-        {desc}
-      </p>
+
+      <div className="space-y-5 mb-12 flex-1 border-t border-white/5 pt-8">
+        {features.map((feat, i) => (
+          <div key={i} className="flex items-start gap-4">
+            <CheckCircle2 size={18} className={`shrink-0 mt-0.5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground/40"}`} />
+            <span className="text-sm text-muted-foreground/80 font-medium">{feat}</span>
+          </div>
+        ))}
+      </div>
+
+      <Button className={`w-full h-14 rounded-[20px] font-black uppercase text-[10px] tracking-[0.2em] transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02]' : 'bg-white/5 text-white hover:bg-white/10'}`}>
+        INITIALIZE_PLAN
+      </Button>
     </motion.div>
   );
 }
