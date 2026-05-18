@@ -8,33 +8,112 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This document outlines the architectural and design standards for the OJSDef SaaS frontend to ensure consistency across the codebase.
 
+OJSDef adalah SaaS untuk memindai keamanan instalasi OJS (Open Journal Systems). Semua teks UI, label, dan data mock menggunakan **Bahasa Indonesia**.
+
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS v4 (CSS-first configuration)
 - **Animations**: Framer Motion
 - **UI Components**: ShadCN UI (Radix-based)
 - **State Management**: TanStack Query (Server State), Zustand (Client State - optional), Context API
-- **Authentication**: NextAuth v5 (Auth.js)
+- **Authentication**: NextAuth v5 (Auth.js) — Credentials provider, JWT strategy
 - **Validation**: Zod + React Hook Form
 
 ## Directory Structure
-- `app/(auth)/`: Authentication pages (Login, Register).
-- `app/(dashboard)/`: Internal SaaS dashboard pages.
-- `components/layout/`: Shared layout pieces (Sidebar, Header).
-- `components/ui/`: Atomic ShadCN components.
-- `lib/mock-data.ts`: Centralized source of truth for all mock data and types.
-- `types/`: Global TypeScript definitions.
+
+```
+app/
+├── (auth)/
+│   ├── login/page.tsx              — Login form (satu-satunya entry point auth untuk MVP)
+│   ├── register/page.tsx           — Info page saja (tanpa form — post-MVP per PRD F-02)
+│   └── forgot-password/page.tsx    — Info page saja (tanpa form — post-MVP per PRD F-06)
+├── (dashboard)/
+│   ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + 3 Quick Insights widget
+│   ├── scanning/page.tsx           — Scan aktif / live
+│   ├── scan-management/page.tsx    — Log teknis (it_admin dan saas_admin saja)
+│   ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion (expandable)
+│   ├── risk-scoring/page.tsx       — Risk scoring matrix
+│   ├── export/page.tsx             — Ekspor laporan PDF
+│   ├── targets/
+│   │   ├── page.tsx                — Daftar semua target OJS terdaftar
+│   │   ├── new/page.tsx            — Form tambah target OJS baru
+│   │   └── [id]/
+│   │       ├── verify/page.tsx     — Verifikasi domain (3-step flow)
+│   │       └── plugin-guide/page.tsx — Panduan instalasi plugin OJSDef (4-step)
+│   ├── add-target/page.tsx         — Redirect ke /targets/new (jangan dihapus)
+│   └── users/page.tsx              — Kelola pengguna placeholder (saas_admin only, Fase 2)
+├── page.tsx                        — Landing page publik
+components/
+├── layout/
+│   └── Sidebar.tsx                 — RBAC sidebar, nav items berdasarkan useSession().role
+├── ui/                             — Atomic ShadCN components
+lib/
+├── mock-data.ts                    — Satu-satunya sumber data mock (domain OJS)
+├── auth.ts                         — 3 hardcoded users untuk prototype
+└── auth.config.ts                  — NextAuth config, JWT/session callbacks, route protection
+types/
+└── ojsdef.ts                       — OJS-domain TypeScript types (source of truth)
+```
+
+## Authentication & RBAC
+
+**Prototype users (hardcoded di `lib/auth.ts`):**
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@ub.ac.id` | `admin123` | `admin_ojs` |
+| `it@ub.ac.id` | `admin123` | `it_admin` |
+| `admin@ojsdef.com` | `password123` | `saas_admin` |
+
+**Sidebar navigation per role (`components/layout/Sidebar.tsx`):**
+- `admin_ojs`: Beranda, Scan Aktif, Laporan Temuan, Risk Scoring, Target OJS, Ekspor (6 item)
+- `it_admin`: semua admin_ojs + Log Teknis (7 item)
+- `saas_admin`: semua it_admin + Kelola Pengguna (8 item)
+
+`session.user.role` diisi via JWT callback di `lib/auth.config.ts`. Gunakan `useSession()` dari `next-auth/react` untuk membaca role di client components.
+
+## Mock Data (`lib/mock-data.ts`)
+
+Import data hanya dari `lib/mock-data.ts`. Jangan buat data fiktif inline di halaman.
+
+**Key exports:**
+- `MOCK_OJS_TARGETS: OJSTarget[]` — 3 target OJS (Universitas Brawijaya, FKUI Jakarta, ITS Surabaya)
+- `MOCK_FINDINGS: ScanFinding[]` — 7 temuan dengan `actionPlan[]` tiap temuan, semua Bahasa Indonesia
+- `MOCK_VULNERABILITIES` — derived dari `MOCK_FINDINGS` (digunakan di vulnerability-report page)
+- `MOCK_SCANS: ScanRow[]` — gunakan `scan.institutionName` dan `scan.scanType` (**bukan** `scan.node` atau `scan.type`)
+- `MOCK_RISK_ITEMS`, `MOCK_SCAN_LOGS`, `MOCK_ACTIVE_SCANS`, `MOCK_SCAN_HISTORY`, `VULN_STATS`, `SYSTEM_HEALTH`
+
+**TypeScript types (`types/ojsdef.ts`)** — import dari sini, jangan redefine:
+- `OJSScanType`: `"internal" | "external" | "full_audit"`
+- `PluginStatus`: `"connected" | "disconnected" | "error" | "never_connected"`
+- `RiskLevel`: `"critical" | "high" | "medium" | "low"`
+- `UserRole`: `"admin_ojs" | "it_admin" | "saas_admin"`
+- Interfaces: `OJSTarget`, `ScanFinding`, `ActionPlanStep`, `ScanSession`
+
+## MVP Scope (PRD v1.2)
+
+Halaman berikut **hanya menampilkan pesan info** — bukan form (post-MVP):
+- `/register` — pesan: "Pembuatan akun dilakukan oleh Administrator OJSDef"
+- `/forgot-password` — pesan: "Hubungi SaaS Administrator OJSDef Anda"
+
+**Jangan** menambahkan form, input, atau link ke kedua halaman tersebut.
 
 ## Design System: "Flat Deep Dark"
-All components must adhere to the high-end dark aesthetic:
-- **Background**: Deep slate/black (`#020617`).
-- **Cards**: Solid dark backgrounds with glassmorphism touches (`bg-slate-900/40 backdrop-blur-sm`).
-- **Borders**: Subtle, high-contrast borders (`border-white/5` or `border-border`).
-- **Accent**: Use the primary cyan/primary theme color for focus and interactive elements.
-- **Micro-animations**: Use Framer Motion for page transitions and hover effects.
+
+Semua komponen harus mengikuti estetika dark ini:
+- **Background**: Deep slate/black (`#020617`)
+- **Cards**: class `glass-dark` (glassmorphism), atau `bg-slate-900/40 backdrop-blur-sm`
+- **Borders**: `border-white/5` atau `border-border`
+- **Accent primary**: Cyan (`text-primary`, `bg-primary`) — focus dan elemen interaktif
+- **Accent secondary**: Green (`text-secondary`, `bg-secondary`) — success states dan active nav indicator
+- **Micro-animations**: Framer Motion untuk page transitions dan hover effects
 
 ## Development Patterns
-1. **Data**: Always use `lib/mock-data.ts` during development to ensure consistent data structures.
-2. **Forms**: Use `FormField` components from `@/components/ui/form` with Zod schemas.
-3. **Icons**: Exclusively use `lucide-react` for iconography.
-4. **Consistency**: Before creating a new component, check if a similar pattern exists in `components/shared` or `components/ui`.
+
+1. **Data**: Selalu gunakan `lib/mock-data.ts`. Jangan buat data fiktif inline di halaman.
+2. **Types**: Import dari `@/types/ojsdef` — jangan redefine interface yang sudah ada.
+3. **Forms**: Gunakan `FormField` dari `@/components/ui/form` dengan Zod schema.
+4. **Icons**: Hanya gunakan `lucide-react`.
+5. **Language**: Semua label UI, teks tombol, pesan error, dan data mock dalam **Bahasa Indonesia**.
+6. **Severity labels**: Urutan PRD — **Kritis / Berbahaya / Perhatian / Aman** (bukan Critical/High/Medium/Low).
+7. **New pages**: Sebelum membuat komponen baru, cek `components/shared` dan `components/ui` terlebih dahulu.
