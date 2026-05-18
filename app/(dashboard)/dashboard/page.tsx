@@ -21,6 +21,12 @@ import { Input } from "@/components/ui/input";
 import { MOCK_SCANS, VULN_STATS, SYSTEM_HEALTH } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
+const SCAN_STATUS_LABEL: Record<string, string> = {
+  Completed: "Selesai",
+  "In Progress": "Berjalan",
+  Failed: "Gagal",
+}
+
 export default function DashboardOverview() {
   return (
     <div className="space-y-8 pb-10">
@@ -152,14 +158,14 @@ export default function DashboardOverview() {
         <div className="px-8 py-6 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
-              Live Engine Operations
+              Scan Terbaru
               <div className="flex gap-1">
                 <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "0ms" }} />
                 <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "200ms" }} />
                 <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "400ms" }} />
               </div>
             </h3>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Real-time scan intelligence feed</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Riwayat pemindaian OJS terbaru</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative group">
@@ -177,10 +183,10 @@ export default function DashboardOverview() {
             <table className="w-full">
               <thead>
                 <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 border-b border-white/5">
-                  <th className="text-left py-6 px-4">Target Instance</th>
-                  <th className="text-left py-6 px-4">Protocol</th>
-                  <th className="text-left py-6 px-4">Risk Level</th>
-                  <th className="text-left py-6 px-4">Threats</th>
+                  <th className="text-left py-6 px-4">URL OJS</th>
+                  <th className="text-left py-6 px-4">Jenis Audit</th>
+                  <th className="text-left py-6 px-4">Tingkat Risiko</th>
+                  <th className="text-left py-6 px-4">Temuan</th>
                   <th className="text-left py-6 px-4">Status</th>
                   <th className="text-right py-6 px-4"></th>
                 </tr>
@@ -226,10 +232,10 @@ export default function DashboardOverview() {
                          )} />
                          <span className={cn(
                            "text-[11px] font-black uppercase tracking-widest",
-                           scan.status === "In Progress" ? "text-primary/70" : 
+                           scan.status === "In Progress" ? "text-primary/70" :
                            scan.status === "Completed" ? "text-secondary/70" : "text-destructive/70"
                          )}>
-                           {scan.status}
+                           {SCAN_STATUS_LABEL[scan.status] ?? scan.status}
                          </span>
                        </div>
                     </td>
@@ -257,9 +263,9 @@ export default function DashboardOverview() {
       {/* QUICK INSIGHTS SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { title: "Engine Throughput", value: "18.4 MS", sub: "+2.4% Optimal", icon: Zap, color: "text-secondary" },
-          { title: "Vulnerability Database", value: "STABLE", sub: "Last Synced: 2m ago", icon: ShieldCheck, color: "text-primary" },
-          { title: "Network Latency", value: "42 MS", sub: "EU-WEST-1 Active", icon: GlobeIcon, color: "text-cyan-400" },
+          { title: "Status Plugin", value: "2 / 3", sub: "Target terhubung ke plugin", icon: Zap, color: "text-secondary" },
+          { title: "Database CVE", value: "Terbaru", sub: "Diperbarui 2 jam lalu", icon: ShieldCheck, color: "text-primary" },
+          { title: "Target OJS", value: "3 Aktif", sub: "1 target perlu perhatian", icon: ShieldAlert, color: "text-cyan-400" },
         ].map((item) => (
           <Card key={item.title} className="glass border-none group hover:border-white/5 transition-all cursor-pointer">
             <CardContent className="p-6 flex items-center gap-5">
@@ -276,24 +282,5 @@ export default function DashboardOverview() {
         ))}
       </div>
     </div>
-  );
-}
-
-function GlobeIcon({ size, className }: { size?: number, className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size || 24} 
-      height={size || 24} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
   );
 }
