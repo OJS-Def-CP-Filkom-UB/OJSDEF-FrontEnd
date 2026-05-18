@@ -7,11 +7,12 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isInternalRoute = 
-        nextUrl.pathname.startsWith("/dashboard") || 
+      const isInternalRoute =
+        nextUrl.pathname.startsWith("/dashboard") ||
         nextUrl.pathname.startsWith("/scanning") ||
         nextUrl.pathname.startsWith("/scan-management") ||
         nextUrl.pathname.startsWith("/add-target") ||
+        nextUrl.pathname.startsWith("/targets") ||
         nextUrl.pathname.startsWith("/risk-scoring") ||
         nextUrl.pathname.startsWith("/export") ||
         nextUrl.pathname.startsWith("/vulnerability-report");

@@ -29,16 +29,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        if (email === "admin@ojsdef.com" && password === "password123") {
-          return {
-            id: "saas-admin-01",
-            name: "OJSDef Security Admin",
-            email: "admin@ojsdef.com",
-            role: "saas_admin",
-          };
-        }
+        const MOCK_USERS = [
+          { id: "admin-ojs-01", name: "Admin Universitas Brawijaya", email: "admin@ub.ac.id", password: "admin123", role: "admin_ojs" },
+          { id: "it-admin-01", name: "Tim IT Universitas Brawijaya", email: "it@ub.ac.id", password: "admin123", role: "it_admin" },
+          { id: "saas-admin-01", name: "OJSDef Administrator", email: "admin@ojsdef.com", password: "password123", role: "saas_admin" },
+        ]
 
-        return null;
+        const found = MOCK_USERS.find((u) => u.email === email && u.password === password)
+        if (found) {
+          return { id: found.id, name: found.name, email: found.email, role: found.role }
+        }
+        return null
       },
     }),
   ],
