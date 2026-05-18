@@ -195,13 +195,13 @@ export default function DashboardOverview() {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[13px] font-bold text-white group-hover:text-primary transition-colors">{scan.url}</span>
-                          <span className="text-[9px] text-muted-foreground mt-1 font-mono uppercase tracking-widest">{scan.node}</span>
+                          <span className="text-[9px] text-muted-foreground mt-1 font-mono uppercase tracking-widest">{scan.institutionName}</span>
                         </div>
                       </div>
                     </td>
                     <td className="py-5 px-4 text-center">
                       <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 bg-primary/5 border border-primary/10 px-2.5 py-1 rounded-full">
-                        {scan.type.split(" ")[0]}
+                        {scan.scanType.split("_")[0]}
                       </span>
                     </td>
                     <td className="py-5 px-4 text-center">

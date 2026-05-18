@@ -113,11 +113,11 @@ export default function ScanManagementPage() {
                   <div className="flex justify-between items-start mb-8">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-black text-white group-hover:text-primary transition-colors tracking-tight uppercase leading-none">{scan.title}</h3>
+                        <h3 className="text-xl font-black text-white group-hover:text-primary transition-colors tracking-tight uppercase leading-none">{scan.institutionName}</h3>
                         <Badge variant="cyber" className="text-[9px] font-black uppercase h-5 px-2">Live_Scan</Badge>
                       </div>
                       <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 uppercase tracking-widest leading-none">
-                         <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-secondary" /> {scan.target}</span>
+                         <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-secondary" /> {scan.targetUrl}</span>
                          <span className="w-1 h-1 rounded-full bg-white/5" />
                          <span>ID: {scan.id}</span>
                       </div>
@@ -146,9 +146,9 @@ export default function ScanManagementPage() {
                       <div className="flex flex-col">
                         <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] mb-1">Threats</span>
                         <div className="flex items-center gap-2">
-                           <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", scan.threatsFound > 0 ? "bg-destructive" : "bg-secondary")} />
-                           <span className={cn("text-base font-black font-mono", scan.threatsFound > 0 ? "text-destructive text-glow-red" : "text-white/60")}>
-                             {String(scan.threatsFound).padStart(2, "0")}
+                           <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", scan.findingsCount > 0 ? "bg-destructive" : "bg-secondary")} />
+                           <span className={cn("text-base font-black font-mono", scan.findingsCount > 0 ? "text-destructive text-glow-red" : "text-white/60")}>
+                             {String(scan.findingsCount).padStart(2, "0")}
                            </span>
                         </div>
                       </div>
@@ -236,9 +236,9 @@ export default function ScanManagementPage() {
                     </td>
                     <td className="py-7 px-6">
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-black text-white group-hover:text-primary transition-colors uppercase tracking-tight">{item.title}</span>
+                        <span className="text-sm font-black text-white group-hover:text-primary transition-colors uppercase tracking-tight">{item.institutionName}</span>
                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-widest">{item.target}</span>
+                           <span className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-widest">{item.targetUrl}</span>
                         </div>
                       </div>
                     </td>
@@ -248,8 +248,8 @@ export default function ScanManagementPage() {
                       </div>
                     </td>
                     <td className="py-7 px-6 text-center">
-                      <Badge variant={item.threatsFound > 0 ? "destructive" : "cyber"} className="h-6 px-3 border-none font-black text-[9px] uppercase tracking-widest">
-                        {item.threatsFound} Detected
+                      <Badge variant={item.findingsCount > 0 ? "destructive" : "cyber"} className="h-6 px-3 border-none font-black text-[9px] uppercase tracking-widest">
+                        {item.findingsCount} Detected
                       </Badge>
                     </td>
                     <td className="py-7 px-6 text-right">
