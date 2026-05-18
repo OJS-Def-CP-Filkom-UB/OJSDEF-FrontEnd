@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -8,14 +8,17 @@ import {
   Play,
   BadgeCheck,
   Zap,
-  Puzzle,
+  Activity,
   ChevronRight,
   ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
+  const [hoveredPricing, setHoveredPricing] = useState<string | null>(null);
+
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30 font-sans overflow-x-hidden">
       {/* NAVBAR */}
@@ -101,8 +104,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-xl text-muted-foreground/60 leading-relaxed max-w-[600px] mb-12 font-medium">
-              Automated vulnerability detection, real-time risk scoring, and
-              comprehensive security reports for enterprise-grade protection.
+              Lindungi instalasi OJS Anda dari penyusupan konten ilegal, defacement, dan eksploitasi kerentanan dengan audit dua arah berbasis CVSS v3.
             </p>
 
             <div className="flex flex-wrap gap-5">
@@ -227,24 +229,72 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <FeatureCard
-              icon={<Shield size={24} />}
-              title="Enterprise_Stability"
-              desc="Ensure continuous protection with our 99.9% uptime SLA, designed for mission-critical infrastructure."
+            <FeatureCard icon={<Shield size={24} />} title="Audit Dua Arah" desc="Pemindaian internal via plugin PHP sekaligus audit eksternal via bot OJSDef untuk deteksi komprehensif." delay={0.1} />
+            <FeatureCard icon={<Zap size={24} />} title="Risk Scoring CVSS v3" desc="Setiap temuan dinilai dengan standar CVSS v3 untuk prioritas perbaikan yang akurat dan terstruktur." delay={0.2} />
+            <FeatureCard icon={<Activity size={24} />} title="Laporan PDF Bahasa Indonesia" desc="Laporan audit lengkap dan panduan perbaikan dalam Bahasa Indonesia, siap dibagikan ke manajemen." delay={0.3} />
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section id="pricing" className="py-32 relative border-y border-white/5">
+        <div className="max-w-[1450px] mx-auto px-8">
+          <div className="mb-20 text-center">
+            <p className="text-primary text-[11px] font-black uppercase tracking-[0.3em] mb-4">
+              Pricing
+            </p>
+
+            <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic">
+              Pilih <span className="text-primary not-italic">Paket</span> Anda
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <PricingCard
+              title="Starter"
+              price="$0"
+              period="/MONTH"
+              desc="Untuk institusi yang baru memulai audit keamanan OJS."
+              features={[
+                "1 target OJS",
+                "Audit Eksternal",
+                "Laporan dasar PDF",
+                "Komunitas support",
+              ]}
+              isActive={hoveredPricing === "Starter"}
+              onHover={() => setHoveredPricing("Starter")}
               delay={0.1}
             />
 
-            <FeatureCard
-              icon={<Zap size={24} />}
-              title="Rapid_Triage"
-              desc="Speed up your security response with actionable insights and automated patching recommendations."
+            <PricingCard
+              title="Cyber_Pro"
+              price="$49"
+              period="/MONTH"
+              desc="Untuk institusi dengan beberapa jurnal OJS aktif."
+              features={[
+                "Semua fitur Starter",
+                "Audit Internal + Eksternal",
+                "Risk Scoring berbasis CVSS v3",
+                "Laporan PDF Bahasa Indonesia",
+              ]}
+              isActive={hoveredPricing === "Cyber_Pro"}
+              onHover={() => setHoveredPricing("Cyber_Pro")}
               delay={0.2}
             />
 
-            <FeatureCard
-              icon={<Puzzle size={24} />}
-              title="Neural_Integration"
-              desc="Easy to set up and scale. Integrates effortlessly with existing CI/CD pipelines and deployment workflows."
+            <PricingCard
+              title="Enterprise"
+              price="Custom"
+              period="/YEAR"
+              desc="Untuk perguruan tinggi dengan puluhan instalasi OJS."
+              features={[
+                "Semua fitur Cyber_Pro",
+                "Multi-target tak terbatas",
+                "Notifikasi Telegram & Email",
+                "Dukungan teknis prioritas",
+              ]}
+              isActive={hoveredPricing === "Enterprise"}
+              onHover={() => setHoveredPricing("Enterprise")}
               delay={0.3}
             />
           </div>
@@ -446,23 +496,46 @@ function FeatureCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
-      className="p-12 rounded-[40px] glass-dark border border-white/5 hover:border-primary/30 transition-all group relative overflow-hidden"
+      className="p-10 rounded-[40px] glass-dark border border-white/5 relative overflow-hidden flex flex-col h-full hover:-translate-y-2 transition-all duration-500"
     >
-      <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity">
+      <div className="w-16 h-16 rounded-[24px] bg-primary/10 text-primary flex items-center justify-center mb-12 shadow-[0_0_30px_rgba(6,182,212,0.1)]">
         {icon}
       </div>
+      <h3 className="text-2xl font-black mb-6 uppercase tracking-tight text-white italic">{title}</h3>
+      <p className="text-lg text-muted-foreground/60 leading-relaxed font-medium">{desc}</p>
+    </motion.div>
+  );
+}
 
-      <div className="w-16 h-16 rounded-[24px] bg-primary/10 text-primary flex items-center justify-center mb-12 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(6,182,212,0.1)] relative z-10">
-        {icon}
+function PricingCard({
+  title, price, period, desc, features, isActive, onHover, delay,
+}: {
+  title: string; price: string; period: string; desc: string;
+  features: string[]; isActive?: boolean; onHover: () => void; delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay }}
+      onMouseEnter={onHover}
+      className={`p-10 rounded-[40px] glass-dark border cursor-pointer ${isActive ? "border-primary/50 shadow-[0_0_40px_rgba(6,182,212,0.15)] bg-slate-900/60" : "border-white/5"} relative overflow-hidden flex flex-col h-full hover:-translate-y-2 transition-all duration-500`}
+    >
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 mb-4">{title}</p>
+      <div className="flex items-end gap-1 mb-2">
+        <span className="text-5xl font-black text-white">{price}</span>
+        <span className="text-sm text-muted-foreground/60 mb-2 font-black uppercase">{period}</span>
       </div>
-
-      <h3 className="text-2xl font-black mb-6 group-hover:text-primary transition-colors uppercase tracking-tight text-white italic relative z-10">
-        {title}
-      </h3>
-
-      <p className="text-lg text-muted-foreground/60 leading-relaxed font-medium relative z-10">
-        {desc}
-      </p>
+      <p className="text-muted-foreground/60 text-sm mb-8">{desc}</p>
+      <ul className="space-y-3 mt-auto">
+        {features.map((f) => (
+          <li key={f} className="flex items-center gap-3 text-sm text-white/70">
+            <CheckCircle2 size={14} className="text-primary shrink-0" />
+            {f}
+          </li>
+        ))}
+      </ul>
     </motion.div>
   );
 }
