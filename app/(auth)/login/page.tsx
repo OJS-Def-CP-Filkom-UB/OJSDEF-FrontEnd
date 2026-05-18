@@ -140,12 +140,7 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">Password</FormLabel>
-                        <Link href="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors">
-                          forgot password?
-                        </Link>
-                      </div>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">Password</FormLabel>
                       <FormControl>
                         <div className="relative group/field">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-focus-within/field:text-primary transition-colors" />
@@ -185,10 +180,6 @@ export default function LoginPage() {
         </Card>
 
         <div className="flex flex-col gap-6">
-          <p className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
-            Don't have an account? <Link href="/register" className="text-primary hover:text-white hover:underline transition-colors">Register Here</Link>
-          </p>
-
           <Link
             href="/"
             className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/20 hover:text-white transition-all group"
