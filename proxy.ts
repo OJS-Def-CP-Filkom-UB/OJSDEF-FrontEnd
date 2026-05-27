@@ -1,8 +1,35 @@
-import NextAuth from "next-auth";
-import { authConfig } from "./lib/auth.config";
+import { NextRequest, NextResponse } from 'next/server'
 
-export default NextAuth(authConfig).auth;
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/targets',
+  '/scanning',
+  '/vulnerability-report',
+  '/risk-scoring',
+  '/export',
+  '/scan-management',
+  '/users',
+]
+
+export function proxy(request: NextRequest) {
+  const hasRefreshCookie = request.cookies.has('ojsdef_refresh')
+  const isProtected = PROTECTED_ROUTES.some((r) =>
+    request.nextUrl.pathname.startsWith(r)
+  )
+  if (isProtected && !hasRefreshCookie) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+}
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-};
+  matcher: [
+    '/dashboard/:path*',
+    '/targets/:path*',
+    '/scanning/:path*',
+    '/vulnerability-report/:path*',
+    '/risk-scoring/:path*',
+    '/export/:path*',
+    '/scan-management/:path*',
+    '/users/:path*',
+  ],
+}

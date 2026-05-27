@@ -1,286 +1,141 @@
-"use client";
+'use client'
 
-import { 
-  ShieldAlert, 
-  Activity, 
-  Clock, 
-  ShieldCheck, 
-  ArrowUpRight, 
-  MoreHorizontal,
-  Search as SearchIcon,
-  Filter,
-  Zap,
-  Radio
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { useDashboardStats } from '@/hooks/use-dashboard'
+import { useScans } from '@/hooks/use-scans'
+import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS, SEVERITY_LABELS, SEVERITY_COLORS } from '@/lib/utils'
+import { ShieldCheck, Target, ScanLine, AlertTriangle } from 'lucide-react'
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { MOCK_SCANS, VULN_STATS, SYSTEM_HEALTH } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+export default function DashboardPage() {
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: recentScans, isLoading: scansLoading } = useScans({ limit: 5 })
 
-const SCAN_STATUS_LABEL: Record<string, string> = {
-  Completed: "Selesai",
-  "In Progress": "Berjalan",
-  Failed: "Gagal",
-}
-
-export default function DashboardOverview() {
   return (
-    <div className="space-y-8 pb-10">
-      {/* PRIMARY METRICS SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Risk Exposure Main Card */}
-        <Card className="lg:col-span-4 glass-dark overflow-hidden border-none relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors" />
-          <CardContent className="p-8 flex flex-col items-center justify-center min-h-[420px]">
-            <div className="text-center space-y-2 mb-8">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary/60">System Security Level</span>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Global Risk Exposure</h2>
-            </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Beranda</h1>
+        <p className="text-slate-400 mt-1 text-sm">Ringkasan postur keamanan instalasi OJS Anda</p>
+      </div>
 
-            <div className="relative w-56 h-56 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle 
-                  className="text-white/3 stroke-current" 
-                  strokeWidth="6" 
-                  fill="transparent" 
-                  r="44" 
-                  cx="50" 
-                  cy="50" 
-                />
-                <motion.circle 
-                  className="text-primary stroke-current" 
-                  strokeWidth="6" 
-                  strokeLinecap="round" 
-                  fill="transparent" 
-                  r="44" 
-                  cx="50" 
-                  cy="50" 
-                  initial={{ strokeDasharray: "0, 276.46" }}
-                  animate={{ strokeDasharray: `${(SYSTEM_HEALTH.score / 100) * 276.46}, 276.46` }}
-                  transition={{ duration: 2, ease: "circOut", delay: 0.2 }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <motion.span 
-                  className="text-7xl font-black text-white text-glow-cyan leading-none"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                >
-                  {SYSTEM_HEALTH.score}
-                </motion.span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Score / 100</span>
-                </div>
-              </div>
+      {/* Quick Insights */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-dark rounded-xl p-5 border border-white/5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-cyan-400/10">
+              <Target className="h-5 w-5 text-cyan-400" />
             </div>
-
-            <div className="mt-10 flex gap-4 w-full">
-              <div className="flex-1 bg-white/2 border border-white/5 rounded-2xl p-4 text-center">
-                <p className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground mb-1">State</p>
-                <p className="text-sm font-bold text-secondary">{SYSTEM_HEALTH.status}</p>
-              </div>
-              <div className="flex-1 bg-white/2 border border-white/5 rounded-2xl p-4 text-center">
-                <p className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground mb-1">Last Audit</p>
-                <p className="text-sm font-bold text-white">4M AGO</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vulnerability Summary Grid */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-            {VULN_STATS.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-              >
-                <Card className="glass border-none h-full group hover:border-white/10 transition-all cursor-pointer overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: stat.color }} />
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                        <h3 className="text-3xl font-black" style={{ color: stat.color }}>{stat.value}</h3>
-                      </div>
-                      <div className="w-10 h-10 rounded-full bg-white/3 flex items-center justify-center text-muted-foreground group-hover:text-white transition-colors">
-                        <ArrowUpRight size={18} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-4 mt-6">
-                      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full rounded-full"
-                          style={{ backgroundColor: stat.color }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${stat.percentage}%` }}
-                          transition={{ duration: 1.5, delay: 0.5 }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-muted-foreground">{stat.percentage}%</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+            <span className="text-slate-400 text-sm">Total Target</span>
           </div>
+          {statsLoading ? (
+            <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold text-white">{stats?.targets.total ?? 0}</p>
+          )}
+        </div>
 
-          <Card className="glass border-none h-32 relative overflow-hidden group cursor-pointer">
-             <div className="absolute inset-0 bg-linear-to-r from-secondary/5 to-transparent transition-opacity group-hover:opacity-100 opacity-50" />
-             <CardContent className="p-0 h-full flex items-center px-8 justify-between relative z-10">
-               <div className="flex items-center gap-6">
-                 <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shadow-[0_0_20px_rgba(0,230,153,0.1)]">
-                   <ShieldCheck size={32} />
-                 </div>
-                 <div>
-                   <h4 className="text-lg font-bold text-white tracking-tight">Active Engine Security Compliance</h4>
-                   <p className="text-sm text-muted-foreground">OJS Integrated Security Protocol is currently adhering to NIST Standards.</p>
-                 </div>
-               </div>
-               <Button className="rounded-full bg-white text-black font-black uppercase text-[10px] tracking-widest px-8 h-10 hover:bg-white/90">
-                 Run Full Compliance Scan
-               </Button>
-             </CardContent>
-          </Card>
+        <div className="glass-dark rounded-xl p-5 border border-white/5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-green-400/10">
+              <ScanLine className="h-5 w-5 text-green-400" />
+            </div>
+            <span className="text-slate-400 text-sm">Scan (30 Hari)</span>
+          </div>
+          {statsLoading ? (
+            <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold text-white">{stats?.scans.last_30_days ?? 0}</p>
+          )}
+        </div>
+
+        <div className="glass-dark rounded-xl p-5 border border-white/5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-blue-400/10">
+              <ShieldCheck className="h-5 w-5 text-blue-400" />
+            </div>
+            <span className="text-slate-400 text-sm">Skor Rata-rata</span>
+          </div>
+          {statsLoading ? (
+            <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold text-white">
+              {stats?.security_posture.average_score != null
+                ? stats.security_posture.average_score.toFixed(1)
+                : '—'}
+            </p>
+          )}
+        </div>
+
+        <div className="glass-dark rounded-xl p-5 border border-white/5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-red-400/10">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <span className="text-slate-400 text-sm">Temuan Kritis</span>
+          </div>
+          {statsLoading ? (
+            <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold text-white">{stats?.findings_summary.critical ?? 0}</p>
+          )}
         </div>
       </div>
 
-      {/* RECENT SCANS TABLE */}
-      <Card className="glass border-none overflow-hidden">
-        <div className="px-8 py-6 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
-              Scan Terbaru
-              <div className="flex gap-1">
-                <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "200ms" }} />
-                <div className="w-1 h-1 rounded-full bg-secondary animate-bounce" style={{ animationDelay: "400ms" }} />
-              </div>
-            </h3>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Riwayat pemindaian OJS terbaru</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input placeholder="TARGET_ID..." className="pl-9 h-10 w-64 text-[11px] bg-white/3 border-white/5 focus:border-primary/30 rounded-full font-mono uppercase tracking-widest" />
-            </div>
-            <Button variant="outline" size="icon" className="h-10 w-10 border-white/5 bg-white/3 rounded-full">
-              <Filter size={16} />
-            </Button>
-          </div>
+      {/* Recent Scans */}
+      <div className="glass-dark rounded-xl border border-white/5">
+        <div className="px-6 py-4 border-b border-white/5">
+          <h2 className="text-white font-semibold">Scan Terbaru</h2>
         </div>
-        
-        <CardContent className="p-0">
-          <div className="overflow-x-auto px-4">
-            <table className="w-full">
+        <div className="overflow-x-auto">
+          {scansLoading ? (
+            <div className="p-6 space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-10 bg-slate-800 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : !recentScans?.length ? (
+            <div className="p-8 text-center text-slate-500">Belum ada scan. Mulai scan pertama Anda.</div>
+          ) : (
+            <table className="w-full text-sm">
               <thead>
-                <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 border-b border-white/5">
-                  <th className="text-left py-6 px-4">URL OJS</th>
-                  <th className="text-left py-6 px-4">Jenis Audit</th>
-                  <th className="text-left py-6 px-4">Tingkat Risiko</th>
-                  <th className="text-left py-6 px-4">Temuan</th>
-                  <th className="text-left py-6 px-4">Status</th>
-                  <th className="text-right py-6 px-4"></th>
+                <tr className="text-slate-500 text-xs uppercase">
+                  <th className="px-6 py-3 text-left">Target</th>
+                  <th className="px-6 py-3 text-left">Tipe</th>
+                  <th className="px-6 py-3 text-left">Status</th>
+                  <th className="px-6 py-3 text-left">Skor</th>
+                  <th className="px-6 py-3 text-left">Tanggal</th>
                 </tr>
               </thead>
-              <tbody>
-                {MOCK_SCANS.map((scan) => (
-                  <tr key={scan.id} className="group border-b border-white/2 hover:bg-white/2 transition-colors cursor-pointer">
-                    <td className="py-5 px-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
-                          <Radio size={16} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[13px] font-bold text-white group-hover:text-primary transition-colors">{scan.url}</span>
-                          <span className="text-[9px] text-muted-foreground mt-1 font-mono uppercase tracking-widest">{scan.institutionName}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-5 px-4 text-center">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 bg-primary/5 border border-primary/10 px-2.5 py-1 rounded-full">
-                        {scan.scanType.split("_")[0]}
+              <tbody className="divide-y divide-white/5">
+                {recentScans.map((scan) => (
+                  <tr key={scan.id} className="hover:bg-white/2 transition-colors">
+                    <td className="px-6 py-4 text-slate-300">{scan.target_id}</td>
+                    <td className="px-6 py-4 text-slate-400">{SCAN_TYPE_LABELS[scan.scan_type]}</td>
+                    <td className="px-6 py-4">
+                      <span className={SCAN_STATUS_COLORS[scan.status]}>
+                        {SCAN_STATUS_LABELS[scan.status]}
                       </span>
                     </td>
-                    <td className="py-5 px-4 text-center">
-                      <Badge className={cn(
-                        "rounded-full px-3 py-0.5 text-[9px] font-black uppercase tracking-widest border-0",
-                        scan.risk === "critical" ? "bg-destructive/10 text-destructive" :
-                        scan.risk === "high" ? "bg-warning/10 text-warning" :
-                        "bg-primary/10 text-primary"
-                      )}>
-                        {scan.risk}
-                      </Badge>
+                    <td className="px-6 py-4">
+                      {scan.overall_score != null ? (
+                        <span className={
+                          scan.risk_level ? SEVERITY_COLORS[scan.risk_level] : 'text-slate-400'
+                        }>
+                          {scan.overall_score.toFixed(1)}
+                          {scan.risk_level && ` — ${SEVERITY_LABELS[scan.risk_level]}`}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
                     </td>
-                    <td className="py-5 px-4 text-center font-black text-xs text-white">
-                      {scan.vulnerabilities}
-                    </td>
-                    <td className="py-5 px-4">
-                       <div className="flex items-center gap-3">
-                         <div className={cn(
-                           "w-1.5 h-1.5 rounded-full",
-                           scan.status === "In Progress" ? "bg-primary animate-pulse" : 
-                           scan.status === "Completed" ? "bg-secondary" : "bg-destructive"
-                         )} />
-                         <span className={cn(
-                           "text-[11px] font-black uppercase tracking-widest",
-                           scan.status === "In Progress" ? "text-primary/70" :
-                           scan.status === "Completed" ? "text-secondary/70" : "text-destructive/70"
-                         )}>
-                           {SCAN_STATUS_LABEL[scan.status] ?? scan.status}
-                         </span>
-                       </div>
-                    </td>
-                    <td className="py-5 px-4 text-right">
-                      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal size={14} />
-                      </Button>
+                    <td className="px-6 py-4 text-slate-500">
+                      {new Date(scan.created_at).toLocaleDateString('id-ID')}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-          
-          <div className="p-8 flex items-center justify-between border-t border-white/5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Showing prioritized threat vectors</span>
-            <div className="flex gap-2">
-              <Button variant="outline" className="h-9 rounded-full px-6 text-[10px] font-black uppercase tracking-widest border-white/5 hover:bg-white/5">Prev_Pge</Button>
-              <Button variant="outline" className="h-9 rounded-full px-6 text-[10px] font-black uppercase tracking-widest border-white/5 hover:bg-white/5">Next_Pge</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* QUICK INSIGHTS SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { title: "Status Plugin", value: "2 / 3", sub: "Target terhubung ke plugin", icon: Zap, color: "text-secondary" },
-          { title: "Database CVE", value: "Terbaru", sub: "Diperbarui 2 jam lalu", icon: ShieldCheck, color: "text-primary" },
-          { title: "Target OJS", value: "3 Aktif", sub: "1 target perlu perhatian", icon: ShieldAlert, color: "text-cyan-400" },
-        ].map((item) => (
-          <Card key={item.title} className="glass border-none group hover:border-white/5 transition-all cursor-pointer">
-            <CardContent className="p-6 flex items-center gap-5">
-              <div className={cn("w-12 h-12 rounded-xl bg-white/3 flex items-center justify-center transition-colors group-hover:bg-white/6", item.color)}>
-                <item.icon size={22} />
-              </div>
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{item.title}</p>
-                <p className="text-xl font-black text-white group-hover:text-primary transition-colors">{item.value}</p>
-                <p className="text-[10px] font-bold text-muted-foreground/40 mt-0.5">{item.sub}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+          )}
+        </div>
       </div>
     </div>
-  );
+  )
 }

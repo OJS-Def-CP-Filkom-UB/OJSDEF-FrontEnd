@@ -1,104 +1,111 @@
-"use client";
+'use client'
 
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
 import {
-  LayoutDashboard, ShieldAlert, Search, BarChart3,
-  LogOut, Download, Terminal, Users, Globe,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { signOut } from "next-auth/react";
-import type { UserRole } from "@/types/ojsdef";
+  LayoutDashboard, Target, ScanLine, ShieldAlert, BarChart2,
+  Download, FileText, Users, LogOut, ChevronRight,
+} from 'lucide-react'
+import type { UserRole } from '@/types/api'
 
-type NavItem = { name: string; href: string; icon: React.ElementType }
+type NavItem = { label: string; href: string; icon: React.ElementType }
 
 const BASE_NAV: NavItem[] = [
-  { name: "Beranda",        href: "/dashboard",            icon: LayoutDashboard },
-  { name: "Scan Aktif",     href: "/scanning",             icon: Search },
-  { name: "Laporan Temuan", href: "/vulnerability-report", icon: ShieldAlert },
-  { name: "Risk Scoring",   href: "/risk-scoring",         icon: BarChart3 },
-  { name: "Target OJS",     href: "/targets",              icon: Globe },
-  { name: "Ekspor",         href: "/export",               icon: Download },
+  { label: 'Beranda', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Target OJS', href: '/targets', icon: Target },
+  { label: 'Laporan Keamanan', href: '/vulnerability-report', icon: ShieldAlert },
+  { label: 'Risk Scoring', href: '/risk-scoring', icon: BarChart2 },
+  { label: 'Export Laporan', href: '/export', icon: Download },
 ]
 
-const IT_ADMIN_NAV: NavItem[] = [...BASE_NAV, { name: "Log Teknis", href: "/scan-management", icon: Terminal }]
-const SAAS_ADMIN_NAV: NavItem[] = [...IT_ADMIN_NAV, { name: "Kelola Pengguna", href: "/users", icon: Users }]
+const SCAN_NAV: NavItem = { label: 'Mulai Scan', href: '/scanning', icon: ScanLine }
+const LOG_NAV: NavItem = { label: 'Log Teknis', href: '/scan-management', icon: FileText }
+const USERS_NAV: NavItem = { label: 'Kelola Pengguna', href: '/users', icon: Users }
 
-const ROLE_LABEL: Record<UserRole, string> = {
-  admin_ojs:  "Admin OJS",
-  it_admin:   "IT Admin",
-  saas_admin: "SaaS Admin",
-}
-
-function getNavItems(role?: string): NavItem[] {
-  if (role === "saas_admin") return SAAS_ADMIN_NAV
-  if (role === "it_admin")   return IT_ADMIN_NAV
-  return BASE_NAV
+function getNavItems(role: UserRole): NavItem[] {
+  if (role === 'viewer') return BASE_NAV
+  if (role === 'admin_ojs') return [...BASE_NAV, SCAN_NAV]
+  // saas_admin
+  return [...BASE_NAV, SCAN_NAV, LOG_NAV, USERS_NAV]
 }
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { data: session } = useSession()
-  const role = session?.user?.role as UserRole | undefined
-  const navigation = getNavItems(role)
+  const router = useRouter()
+  const { user, logout, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <aside className="w-64 flex-shrink-0 h-screen flex flex-col bg-slate-950 border-r border-white/5">
+        <div className="px-6 py-5 border-b border-white/5">
+          <div className="h-8 w-24 bg-slate-800 rounded animate-pulse" />
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 bg-slate-800/60 rounded-lg animate-pulse" />
+          ))}
+        </nav>
+      </aside>
+    )
+  }
+
+  if (!user) return null
+
+  const navItems = getNavItems(user.role)
+
+  async function handleLogout() {
+    await logout()
+    router.push('/login')
+  }
 
   return (
-    <aside className="w-[260px] border-r border-white/5 bg-neutral-950 flex flex-col h-screen fixed left-0 top-0 z-40">
-      <div className="p-8">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
-            <ShieldAlert size={18} />
+    <aside className="w-64 flex-shrink-0 h-screen flex flex-col bg-slate-950 border-r border-white/5">
+      {/* Logo */}
+      <div className="px-6 py-5 border-b border-white/5">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <ShieldAlert className="h-5 w-5 text-white" />
           </div>
-          <span className="text-lg font-bold tracking-tight text-white uppercase italic">
-            OJS<span className="text-secondary">Def</span>
-          </span>
+          <span className="text-white font-bold text-lg">OJSDef</span>
         </Link>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navItems.map(({ label, href, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all group relative",
-                isActive ? "text-secondary font-bold" : "text-muted-foreground hover:text-white hover:bg-white/2"
-              )}
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group ${
+                active
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
             >
-              {isActive && <div className="absolute left-0 w-1 h-5 bg-secondary rounded-r-full shadow-[0_0_10px_rgba(0,230,153,0.5)]" />}
-              <item.icon size={18} className={cn("transition-colors", isActive ? "text-secondary" : "text-muted-foreground group-hover:text-white")} />
-              {item.name}
+              <Icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-primary' : 'text-slate-500 group-hover:text-white'}`} />
+              <span className="flex-1">{label}</span>
+              {active && <ChevronRight className="h-3 w-3 text-primary" />}
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 mt-auto">
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2.5 rounded-lg text-[13px] font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/5 transition-all text-left"
-        >
-          <LogOut size={18} />
-          Sign Out
-        </button>
-
-        <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-[10px] font-bold text-secondary border border-secondary/30">
-              {session?.user?.name?.slice(0, 2).toUpperCase() ?? "AD"}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">{session?.user?.name ?? "Administrator"}</p>
-              <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">
-                {role ? ROLE_LABEL[role] : "—"}
-              </p>
-            </div>
-          </div>
+      {/* User info + logout */}
+      <div className="px-3 py-4 border-t border-white/5 space-y-1">
+        <div className="px-3 py-2">
+          <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
+          <p className="text-slate-500 text-xs truncate">{user.email}</p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+        >
+          <LogOut className="h-4 w-4 text-slate-500" />
+          Keluar
+        </button>
       </div>
     </aside>
   )

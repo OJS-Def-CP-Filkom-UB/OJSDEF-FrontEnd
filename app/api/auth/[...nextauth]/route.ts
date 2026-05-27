@@ -1,3 +1,2 @@
-import { handlers } from "@/lib/auth";
-
-export const { GET, POST } = handlers;
+// Legacy NextAuth route — replaced by app/api/auth/login, /refresh, /logout routes
+export {}

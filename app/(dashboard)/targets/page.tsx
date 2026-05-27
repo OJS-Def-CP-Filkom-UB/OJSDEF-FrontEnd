@@ -1,106 +1,129 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { Plus, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock } from "lucide-react";
-import { motion } from "framer-motion";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MOCK_OJS_TARGETS } from "@/lib/mock-data";
-import type { PluginStatus } from "@/types/ojsdef";
-import { cn } from "@/lib/utils";
-
-const PLUGIN_STATUS_CONFIG: Record<PluginStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  connected:       { label: "Terhubung",         color: "text-secondary",           icon: CheckCircle2 },
-  disconnected:    { label: "Terputus",           color: "text-destructive",          icon: XCircle },
-  error:           { label: "Error",              color: "text-warning",              icon: XCircle },
-  never_connected: { label: "Belum Diverifikasi", color: "text-muted-foreground",     icon: Clock },
-}
-
-function getRiskColor(score: number | null): string {
-  if (score === null) return "text-muted-foreground"
-  if (score >= 80) return "text-destructive"
-  if (score >= 60) return "text-orange-400"
-  if (score >= 40) return "text-warning"
-  return "text-secondary"
-}
+import { useTargets, useDeleteTarget } from '@/hooks/use-targets'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Plus, CheckCircle, XCircle, Wifi, WifiOff, ExternalLink, Trash2 } from 'lucide-react'
 
 export default function TargetsPage() {
+  const { data: targets, isLoading } = useTargets()
+  const deleteTarget = useDeleteTarget()
+
   return (
-    <div className="space-y-8 pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase">
-            Daftar Target <span className="text-primary">OJS</span>
-          </h1>
-          <p className="text-muted-foreground/60 text-sm mt-1">{MOCK_OJS_TARGETS.length} instalasi OJS terdaftar</p>
+          <h1 className="text-2xl font-bold text-white">Target OJS</h1>
+          <p className="text-slate-400 mt-1 text-sm">Daftar instalasi OJS yang dipantau</p>
         </div>
         <Link href="/targets/new">
-          <Button className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase text-xs tracking-widest shadow-[0_0_40px_rgba(6,182,212,0.3)] hover:scale-105 transition-transform gap-2">
-            <Plus size={16} /> Tambah Target
+          <Button className="bg-primary hover:bg-primary/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Tambah Target
           </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {MOCK_OJS_TARGETS.map((target, i) => {
-          const statusCfg = PLUGIN_STATUS_CONFIG[target.pluginStatus]
-          const StatusIcon = statusCfg.icon
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-48 bg-slate-800 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : !targets?.length ? (
+        <div className="glass-dark rounded-xl border border-white/5 p-12 text-center">
+          <p className="text-slate-500 mb-4">Belum ada target OJS terdaftar.</p>
+          <Link href="/targets/new">
+            <Button className="bg-primary hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Target Pertama
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {targets.map((target) => (
+            <div key={target.id} className="glass-dark rounded-xl border border-white/5 p-5 space-y-4">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="text-white font-semibold truncate">{target.name}</h3>
+                  <a
+                    href={target.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-500 text-xs hover:text-cyan-400 flex items-center gap-1 mt-0.5"
+                  >
+                    {target.url}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-600 hover:text-red-400 flex-shrink-0"
+                  onClick={() => {
+                    if (confirm(`Hapus target "${target.name}"?`)) {
+                      deleteTarget.mutate(target.id)
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
 
-          return (
-            <motion.div key={target.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-              <Card className="glass-dark border border-transparent hover:border-white/10 transition-all h-full">
-                <CardContent className="p-6 flex flex-col gap-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-white">{target.institutionName}</p>
-                      <p className="text-[10px] font-mono text-muted-foreground/50 mt-0.5">{target.url}</p>
-                    </div>
-                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase tracking-widest border-white/10", statusCfg.color)}>
-                      <StatusIcon size={10} className="mr-1" />
-                      {statusCfg.label}
-                    </Badge>
-                  </div>
+              {/* Status badges */}
+              <div className="flex flex-wrap gap-2">
+                <div className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
+                  target.is_verified
+                    ? 'bg-green-400/10 text-green-400 border border-green-400/20'
+                    : 'bg-slate-700 text-slate-400'
+                }`}>
+                  {target.is_verified
+                    ? <CheckCircle className="h-3 w-3" />
+                    : <XCircle className="h-3 w-3" />}
+                  {target.is_verified ? 'Terverifikasi' : 'Belum Verifikasi'}
+                </div>
+                <div className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
+                  target.plugin_connected
+                    ? 'bg-cyan-400/10 text-cyan-400 border border-cyan-400/20'
+                    : 'bg-slate-700 text-slate-400'
+                }`}>
+                  {target.plugin_connected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                  {target.plugin_connected ? 'Plugin Terhubung' : 'Plugin Tidak Aktif'}
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/3 rounded-xl p-3">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Skor Risiko</p>
-                      <p className={cn("text-xl font-black", getRiskColor(target.lastRiskScore))}>
-                        {target.lastRiskScore ?? "—"}
-                      </p>
-                    </div>
-                    <div className="bg-white/3 rounded-xl p-3">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Versi OJS</p>
-                      <p className="text-xs font-mono text-white/80">{target.ojsVersion ?? "?"}</p>
-                    </div>
-                  </div>
+              {target.ojs_version && (
+                <p className="text-slate-500 text-xs">OJS {target.ojs_version}</p>
+              )}
 
-                  <p className="text-[9px] text-muted-foreground/30 font-mono">
-                    Scan terakhir: {target.lastScanAt ?? "Belum pernah"}
-                  </p>
-
-                  <div className="flex gap-2 mt-auto pt-2 border-t border-white/5">
-                    <Link href={`/targets/${target.id}/verify`} className="flex-1">
-                      <Button variant="outline" className="w-full h-9 text-[9px] font-black uppercase tracking-widest border-white/5 rounded-xl hover:bg-white/5">
-                        Detail
-                      </Button>
-                    </Link>
-                    <Button variant="outline" className="h-9 px-3 border-white/5 rounded-xl hover:bg-white/5 text-muted-foreground">
-                      <RefreshCw size={14} />
+              {/* Actions */}
+              <div className="flex gap-2 pt-2 border-t border-white/5">
+                <Link href={`/targets/${target.id}`} className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full border-white/10 text-slate-300 hover:text-white text-xs">
+                    Detail
+                  </Button>
+                </Link>
+                {!target.is_verified && (
+                  <Link href={`/targets/${target.id}/verify`} className="flex-1">
+                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-xs">
+                      Verifikasi
                     </Button>
-                    <a href={`https://${target.url}`} target="_blank" rel="noreferrer">
-                      <Button variant="outline" className="h-9 px-3 border-white/5 rounded-xl hover:bg-white/5 text-muted-foreground">
-                        <ExternalLink size={14} />
-                      </Button>
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )
-        })}
-      </div>
+                  </Link>
+                )}
+                {target.is_verified && !target.plugin_connected && (
+                  <Link href={`/targets/${target.id}/plugin-guide`} className="flex-1">
+                    <Button size="sm" className="w-full bg-cyan-500 hover:bg-cyan-600 text-xs">
+                      Pasang Plugin
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
