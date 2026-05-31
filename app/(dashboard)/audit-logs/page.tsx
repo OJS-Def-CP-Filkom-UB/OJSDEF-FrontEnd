@@ -31,7 +31,8 @@ export default function AuditLogsPage() {
   const [filterEmail, setFilterEmail] = useState('')
   const [filterAction, setFilterAction] = useState('')
 
-  if (user && user.role !== 'saas_admin') {
+  if (!user) return null  // masih loading
+  if (user.role !== 'saas_admin') {
     router.replace('/dashboard')
     return null
   }
