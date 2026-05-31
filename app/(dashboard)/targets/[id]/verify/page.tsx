@@ -1,156 +1,181 @@
 'use client'
 
-import { use } from 'react'
-import { useTarget, useVerifyTarget } from '@/hooks/use-targets'
+import { use, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Copy, CheckCircle2, AlertCircle, FileText, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, XCircle, ArrowLeft, FileText, Globe } from 'lucide-react'
-import Link from 'next/link'
-import { useState } from 'react'
+import { useTarget, useVerifyTarget } from '@/hooks/use-targets'
 
-type Method = 'file' | 'dns'
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  function handleCopy() {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-slate-400 hover:text-primary transition-colors p-1 rounded"
+      title="Salin"
+    >
+      {copied ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+    </button>
+  )
+}
+
+function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Langkah {number}</p>
+      <p className="text-white text-sm">{title}</p>
+      {children}
+    </div>
+  )
+}
+
+function CodeRow({ value, highlight, small }: { value: string; highlight?: 'green'; small?: boolean }) {
+  return (
+    <div className="flex items-center justify-between bg-slate-900 rounded-lg px-4 py-3 mt-1">
+      <code className={`font-mono break-all ${small ? 'text-xs' : 'text-sm'} ${highlight === 'green' ? 'text-green-400' : 'text-primary'}`}>
+        {value}
+      </code>
+      <div className="ml-3 shrink-0">
+        <CopyButton text={value} />
+      </div>
+    </div>
+  )
+}
 
 export default function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { data: target, isLoading } = useTarget(id)
-  const verifyTarget = useVerifyTarget(id)
-  const [method, setMethod] = useState<Method>('file')
-  const [verifyResult, setVerifyResult] = useState<{ verified: boolean; method: string | null } | null>(null)
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'file' | 'dns'>('file')
+  const [verifyError, setVerifyError] = useState<string | null>(null)
 
-  async function handleVerify() {
-    try {
-      // Backend mencoba file & DNS secara berurutan otomatis — tidak perlu kirim method
-      const result = await verifyTarget.mutateAsync()
-      setVerifyResult(result)
-    } catch {
-      setVerifyResult({ verified: false, method: null })
-    }
+  const { data: target } = useTarget(id)
+  const verifyMutation = useVerifyTarget(id)
+
+  function handleVerify() {
+    setVerifyError(null)
+    verifyMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        if (data.verified) {
+          router.push(`/targets/${id}/plugin-guide`)
+        } else {
+          setVerifyError('Verifikasi belum berhasil. Pastikan file atau DNS record sudah terpasang, lalu coba lagi.')
+        }
+      },
+      onError: () => {
+        setVerifyError('Terjadi kesalahan saat memeriksa verifikasi. Silakan coba lagi.')
+      },
+    })
   }
 
-  if (isLoading) return <div className="h-64 bg-slate-800 rounded-xl animate-pulse" />
+  const token = target?.verification_token
+  const domain = (() => {
+    try { return new URL(target?.url ?? '').hostname } catch { return target?.url ?? '' }
+  })()
 
-  if (!target) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-slate-500">Target tidak ditemukan.</p>
-        <Link href="/targets"><Button variant="ghost" className="mt-4">Kembali</Button></Link>
-      </div>
-    )
-  }
+  const fileInfo = token ? {
+    filename: `ojsdef-verify-${token}.txt`,
+    content: `ojsdef-verification=${token}`,
+    path: `/.well-known/ojsdef-verify-${token}.txt`,
+  } : null
 
-  if (target.is_verified) {
-    return (
-      <div className="max-w-lg space-y-6">
-        <Link href={`/targets/${id}`} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Detail Target
-        </Link>
-        <div className="glass-dark rounded-xl border border-green-400/20 bg-green-400/5 p-8 text-center">
-          <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-3" />
-          <h2 className="text-white text-xl font-bold">Target Sudah Terverifikasi</h2>
-          <p className="text-slate-400 mt-2 text-sm">{target.name} sudah berhasil diverifikasi.</p>
-          <Link href={`/targets/${id}/plugin-guide`}>
-            <Button className="mt-6 bg-primary hover:bg-primary/90">Lanjut ke Panduan Plugin</Button>
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  const dnsInfo = token ? {
+    record_name: `_ojsdef-verify.${domain}`,
+    record_value: `ojsdef-verification=${token}`,
+  } : null
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <Link href={`/targets/${id}`} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Detail Target
-        </Link>
         <h1 className="text-2xl font-bold text-white">Verifikasi Domain</h1>
-        <p className="text-slate-400 mt-1 text-sm">
-          Buktikan kepemilikan domain <span className="text-cyan-400">{target.url}</span>
+        <p className="text-slate-400 text-sm mt-1">
+          {target?.url ?? '—'} · Pilih metode verifikasi di bawah
         </p>
       </div>
 
-      {/* Method selector */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => setMethod('file')}
-          className={`glass-dark rounded-xl border p-4 text-left transition-all ${
-            method === 'file' ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-white/10'
-          }`}
-        >
-          <FileText className={`h-5 w-5 mb-2 ${method === 'file' ? 'text-primary' : 'text-slate-500'}`} />
-          <p className="text-white text-sm font-medium">Upload File</p>
-          <p className="text-slate-500 text-xs mt-0.5">Unggah file verifikasi ke server OJS</p>
-        </button>
-        <button
-          onClick={() => setMethod('dns')}
-          className={`glass-dark rounded-xl border p-4 text-left transition-all ${
-            method === 'dns' ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-white/10'
-          }`}
-        >
-          <Globe className={`h-5 w-5 mb-2 ${method === 'dns' ? 'text-primary' : 'text-slate-500'}`} />
-          <p className="text-white text-sm font-medium">DNS TXT Record</p>
-          <p className="text-slate-500 text-xs mt-0.5">Tambahkan TXT record ke DNS domain</p>
-        </button>
+      <div className="flex gap-0 border-b border-white/5">
+        {(['file', 'dns'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === tab
+                ? 'border-primary text-primary'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            {tab === 'file' ? <FileText className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+            {tab === 'file' ? 'Metode File' : 'Metode DNS'}
+          </button>
+        ))}
       </div>
 
-      {/* Instructions */}
-      <div className="glass-dark rounded-xl border border-white/5 p-5 space-y-3">
-        {method === 'file' ? (
-          <>
-            <h3 className="text-white font-medium">Langkah Verifikasi File</h3>
-            <ol className="space-y-2 text-sm text-slate-400 list-decimal list-inside">
-              <li>Unduh file verifikasi dari backend (akan diberikan setelah klik Verifikasi)</li>
-              <li>Upload ke direktori root OJS: <code className="text-cyan-400 bg-slate-800 px-1 rounded">public/ojsdef-verify.txt</code></li>
-              <li>Pastikan file dapat diakses di <code className="text-cyan-400">{target.url}/ojsdef-verify.txt</code></li>
-              <li>Klik tombol Periksa Verifikasi</li>
-            </ol>
-          </>
-        ) : (
-          <>
-            <h3 className="text-white font-medium">Langkah Verifikasi DNS</h3>
-            <ol className="space-y-2 text-sm text-slate-400 list-decimal list-inside">
-              <li>Login ke panel DNS domain Anda</li>
-              <li>Tambahkan TXT record baru untuk domain root</li>
-              <li>Isi nilai record dengan token yang diberikan backend</li>
-              <li>Tunggu propagasi DNS (5–30 menit), lalu klik Periksa Verifikasi</li>
-            </ol>
-          </>
-        )}
-      </div>
-
-      {/* Result */}
-      {verifyResult && (
-        <div className={`rounded-xl border p-4 flex items-center gap-3 ${
-          verifyResult.verified
-            ? 'bg-green-400/10 border-green-400/20'
-            : 'bg-red-400/10 border-red-400/20'
-        }`}>
-          {verifyResult.verified
-            ? <CheckCircle className="h-5 w-5 text-green-400" />
-            : <XCircle className="h-5 w-5 text-red-400" />}
-          <p className={`text-sm ${verifyResult.verified ? 'text-green-400' : 'text-red-400'}`}>
-            {verifyResult.verified
-              ? 'Domain berhasil diverifikasi!'
-              : 'Verifikasi gagal. Pastikan file/record sudah dipasang dengan benar.'}
-          </p>
+      {verifyError && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 flex gap-2">
+          <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+          <p className="text-red-300/90 text-sm">{verifyError}</p>
         </div>
       )}
 
-      <Button
-        onClick={handleVerify}
-        disabled={verifyTarget.isPending}
-        className="bg-primary hover:bg-primary/90"
-      >
-        {verifyTarget.isPending ? 'Memeriksa...' : 'Periksa Verifikasi'}
-      </Button>
-
-      {verifyResult?.verified && (
-        <Link href={`/targets/${id}/plugin-guide`}>
-          <Button variant="outline" className="border-white/10 text-slate-300 hover:text-white">
-            Lanjut ke Panduan Plugin →
+      {!token ? (
+        <p className="text-slate-400 text-sm">Memuat informasi verifikasi...</p>
+      ) : activeTab === 'file' && fileInfo ? (
+        <div className="glass-dark rounded-xl border border-white/5 p-6 space-y-5">
+          <Step number={1} title="Buat file dengan nama berikut di server OJS Anda:">
+            <CodeRow value={fileInfo.filename} />
+          </Step>
+          <Step number={2} title="Isi file tersebut dengan konten berikut (satu baris):">
+            <CodeRow value={fileInfo.content} highlight="green" />
+          </Step>
+          <Step number={3} title="Upload file ke path berikut agar dapat diakses publik:">
+            <CodeRow value={`${target?.url}${fileInfo.path}`} small />
+          </Step>
+          <Button
+            onClick={handleVerify}
+            disabled={verifyMutation.isPending}
+            className="w-full bg-primary hover:bg-primary/90"
+          >
+            {verifyMutation.isPending ? 'Memeriksa...' : 'Cek Verifikasi'}
           </Button>
-        </Link>
-      )}
+        </div>
+      ) : activeTab === 'dns' && dnsInfo ? (
+        <div className="glass-dark rounded-xl border border-white/5 p-6 space-y-5">
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3 flex gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-amber-300/90 text-sm">
+              Propagasi DNS dapat memakan waktu hingga 24 jam setelah record ditambahkan.
+            </p>
+          </div>
+          <p className="text-white text-sm">Tambahkan TXT record berikut di pengaturan DNS domain Anda:</p>
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 text-xs text-slate-500 font-semibold uppercase tracking-wider px-1">
+              <span>Tipe</span><span>Nama Record</span><span>Nilai</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-slate-900 rounded px-3 py-2.5 text-slate-300 text-sm font-mono">TXT</div>
+              <div className="flex items-center justify-between bg-slate-900 rounded px-3 py-2.5">
+                <code className="text-primary text-xs font-mono break-all">{dnsInfo.record_name}</code>
+                <CopyButton text={dnsInfo.record_name} />
+              </div>
+              <div className="flex items-center justify-between bg-slate-900 rounded px-3 py-2.5">
+                <code className="text-green-400 text-xs font-mono break-all">{dnsInfo.record_value}</code>
+                <CopyButton text={dnsInfo.record_value} />
+              </div>
+            </div>
+          </div>
+          <Button
+            onClick={handleVerify}
+            disabled={verifyMutation.isPending}
+            className="w-full bg-primary hover:bg-primary/90"
+          >
+            {verifyMutation.isPending ? 'Memeriksa...' : 'Cek Verifikasi'}
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }
