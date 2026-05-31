@@ -35,12 +35,17 @@ export function useDeleteTarget() {
 }
 
 export function useVerifyTarget(targetId: string) {
+  const qc = useQueryClient()
   return useMutation({
     // Backend mencoba file & DNS secara berurutan — tidak perlu kirim method di body
     mutationFn: () =>
       api
         .post<VerifyTargetResponse>(`/api/v1/targets/${targetId}/verify`)
         .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['targets', targetId] })
+      qc.invalidateQueries({ queryKey: ['targets'] })
+    },
   })
 }
 

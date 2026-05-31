@@ -30,7 +30,7 @@ function getActionButton(t: OJSTarget): { label: string; href: string } {
   if (t.plugin_status === 'connected') {
     return { label: 'Mulai Scan', href: `/scanning?target=${t.id}` }
   }
-  return { label: 'Lihat Status Plugin', href: `#plugin-status` }
+  return { label: 'Lihat Status Plugin', href: `/targets/${t.id}/plugin-guide` }
 }
 
 const SCAN_STATUS_LABELS: Record<string, string> = {

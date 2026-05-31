@@ -8,10 +8,14 @@ import { useTarget, useVerifyTarget } from '@/hooks/use-targets'
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
-  function handleCopy() {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard API unavailable — do nothing, user can copy manually
+    }
   }
   return (
     <button
