@@ -24,11 +24,31 @@ export interface OJSTarget {
   url: string
   is_verified: boolean
   plugin_connected: boolean
+  plugin_status: 'connected' | 'disconnected' | 'error' | 'never_connected'
+  connection_mode: 'direct' | 'heartbeat' | 'unknown' | null
+  last_heartbeat: string | null
+  verification_token: string | null
   ojs_version: string | null
   created_at: string
 }
 export interface CreateTargetRequest { name: string; url: string }
-export interface VerifyTargetResponse { verified: boolean; method: 'file' | 'dns' | null }
+export interface FileMethodInfo {
+  filename: string
+  content: string
+  path: string
+}
+export interface DnsMethodInfo {
+  record_type: string
+  record_name: string
+  record_value: string
+}
+export interface VerifyTargetResponse {
+  verified: boolean
+  method: 'file' | 'dns' | null
+  verification_token: string | null
+  file_method: FileMethodInfo | null
+  dns_method: DnsMethodInfo | null
+}
 export interface PluginGuideResponse {
   target_id: string
   api_key: string
