@@ -90,12 +90,41 @@ export interface Report {
 
 // Admin
 export interface AdminUserListItem { id: string; email: string; role: UserRole; is_active: boolean }
-export interface CreateUserRequest { email: string; full_name: string; role: UserRole; tenant_id?: string }
+export interface CreateUserRequest { email: string; full_name: string; role: UserRole; tenant_id?: string; new_tenant_name?: string }
 /** Response untuk POST /api/v1/admin/users — temp_password hanya muncul sekali di response ini */
 export interface CreateUserResponse extends UserProfile { temp_password: string }
 export interface UpdateUserRequest { is_active?: boolean; role?: UserRole }
 export interface Tenant { id: string; name: string; slug: string; is_active: boolean }
 export interface CreateTenantRequest { name: string; slug: string }
+
+// Audit Logs
+export interface AuditLog {
+  id: string
+  user_email: string
+  tenant_id: string | null
+  action: string
+  resource_type: string
+  resource_id: string | null
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface AuditLogListResponse {
+  items: AuditLog[]
+  total: number
+  page: number
+  per_page: number
+}
+
+export interface AuditLogParams {
+  page?: number
+  per_page?: number
+  action?: string
+  user_email?: string
+  tenant_id?: string
+  date_from?: string
+  date_to?: string
+}
 
 // Error
 export interface ApiError { detail: string }
