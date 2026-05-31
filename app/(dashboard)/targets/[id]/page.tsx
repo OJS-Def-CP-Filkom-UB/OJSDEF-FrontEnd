@@ -18,7 +18,20 @@ import { Badge } from '@/components/ui/badge'
 import { useTarget } from '@/hooks/use-targets'
 import { useScans, useStartScan } from '@/hooks/use-scans'
 import { cn } from '@/lib/utils'
-import type { ScanJob } from '@/types/api'
+import type { ScanJob, OJSTarget } from '@/types/api'
+
+function getActionButton(t: OJSTarget): { label: string; href: string } {
+  if (!t.is_verified) {
+    return { label: 'Verifikasi Domain', href: `/targets/${t.id}/verify` }
+  }
+  if (t.plugin_status === 'never_connected') {
+    return { label: 'Panduan Instalasi Plugin', href: `/targets/${t.id}/plugin-guide` }
+  }
+  if (t.plugin_status === 'connected') {
+    return { label: 'Mulai Scan', href: `/scanning?target=${t.id}` }
+  }
+  return { label: 'Lihat Status Plugin', href: `#plugin-status` }
+}
 
 const SCAN_STATUS_LABELS: Record<string, string> = {
   queued: 'Menunggu',
@@ -114,6 +127,18 @@ export default function TargetDetailPage() {
           </p>
         </div>
       </div>
+
+      {/* Primary Action CTA */}
+      {target && (() => {
+        const action = getActionButton(target)
+        return (
+          <Link href={action.href}>
+            <Button className="bg-primary hover:bg-primary/90 text-sm">
+              {action.label}
+            </Button>
+          </Link>
+        )
+      })()}
 
       {/* Status Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
