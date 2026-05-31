@@ -3,6 +3,7 @@ import { api } from '@/lib/api'
 import type {
   AdminUserListItem,
   CreateUserRequest,
+  CreateUserResponse,
   UpdateUserRequest,
   Tenant,
   CreateTenantRequest,
@@ -20,7 +21,7 @@ export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateUserRequest) =>
-      api.post<AdminUserListItem>('/api/v1/admin/users', data).then((r) => r.data),
+      api.post<CreateUserResponse>('/api/v1/admin/users', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
   })
 }

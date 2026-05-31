@@ -12,15 +12,12 @@ export function useReports() {
 export function useDownloadReport() {
   return useMutation({
     mutationFn: async (reportId: string) => {
-      const res = await api.get(`/api/v1/reports/${reportId}/download`, {
-        responseType: 'blob',
-      })
-      const url = URL.createObjectURL(res.data as Blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `ojsdef-report-${reportId}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
+      // Backend returns 302 redirect ke MinIO pre-signed URL.
+      // Gunakan window.open agar browser mengikuti redirect langsung.
+      if (typeof window !== 'undefined') {
+        // Buka tab baru — browser akan mengikuti 302 dan mulai download.
+        window.open(`/api/v1/reports/${reportId}/pdf`, '_blank')
+      }
     },
   })
 }

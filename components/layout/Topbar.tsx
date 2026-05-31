@@ -1,13 +1,25 @@
 "use client";
 
 import React from "react";
-import { 
-  Bell, 
-  HelpCircle, 
+import {
+  Bell,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Topbar() {
+  const { user } = useAuth();
+
+  // Ambil inisial dari nama — contoh: "Budi Santoso" → "BS"
+  const initials = user?.full_name
+    ? user.full_name
+        .split(' ')
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? '')
+        .join('')
+    : '??';
+
   return (
     <header className="h-14 border-b border-white/5 bg-black/20 backdrop-blur-md sticky top-0 z-30 px-6 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -32,8 +44,11 @@ export default function Topbar() {
         <div className="h-6 w-px bg-white/5" />
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-secondary font-bold text-[10px]">
-            AD
+          <div
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-secondary font-bold text-[10px]"
+            title={user?.full_name ?? ''}
+          >
+            {initials}
           </div>
         </div>
       </div>

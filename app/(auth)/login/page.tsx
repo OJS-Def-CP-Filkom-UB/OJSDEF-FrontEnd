@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,8 +47,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#020617]">
       <div className="w-full max-w-md glass-dark rounded-xl p-8 border border-white/5">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">OJSDef</h1>
-          <p className="text-slate-400 mt-1 text-sm">Masuk ke dashboard keamanan OJS Anda</p>
+          <div className="flex flex-col items-center justify-center gap-3 mb-3">
+            <Image src="/logo-OjsDef.webp" alt="OJSDef" width={100} height={100} className="h-30 w-30 object-contain" />
+            {/*<h1 className="text-2xl font-bold text-white">OJSDef</h1>*/}
+          </div>
+          <p className="text-slate-400 text-sm">Masuk ke dashboard keamanan OJS Anda</p>
         </div>
 
         <Form {...form}>
@@ -93,7 +97,7 @@ export default function LoginPage() {
             {error && (
               <div className="flex items-center gap-2 text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{error}</span>
+                <span>Email atau Password Salah!</span>
               </div>
             )}
 

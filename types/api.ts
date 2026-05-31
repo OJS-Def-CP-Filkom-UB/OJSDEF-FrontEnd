@@ -91,6 +91,8 @@ export interface Report {
 // Admin
 export interface AdminUserListItem { id: string; email: string; role: UserRole; is_active: boolean }
 export interface CreateUserRequest { email: string; full_name: string; role: UserRole; tenant_id?: string }
+/** Response untuk POST /api/v1/admin/users — temp_password hanya muncul sekali di response ini */
+export interface CreateUserResponse extends UserProfile { temp_password: string }
 export interface UpdateUserRequest { is_active?: boolean; role?: UserRole }
 export interface Tenant { id: string; name: string; slug: string; is_active: boolean }
 export interface CreateTenantRequest { name: string; slug: string }

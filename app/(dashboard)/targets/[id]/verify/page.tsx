@@ -18,7 +18,8 @@ export default function VerifyPage({ params }: { params: Promise<{ id: string }>
 
   async function handleVerify() {
     try {
-      const result = await verifyTarget.mutateAsync(method)
+      // Backend mencoba file & DNS secara berurutan otomatis — tidak perlu kirim method
+      const result = await verifyTarget.mutateAsync()
       setVerifyResult(result)
     } catch {
       setVerifyResult({ verified: false, method: null })

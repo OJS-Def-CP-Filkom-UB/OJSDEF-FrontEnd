@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import {
   LayoutDashboard, Target, ScanLine, ShieldAlert, BarChart2,
-  Download, FileText, Users, LogOut, ChevronRight,
+  Download, FileText, Users, LogOut, ChevronRight, KeyRound,
 } from 'lucide-react'
 import type { UserRole } from '@/types/api'
 
@@ -64,9 +65,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/5">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <ShieldAlert className="h-5 w-5 text-white" />
-          </div>
+          <Image src="/logo-OjsDef.webp" alt="OJSDef" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="text-white font-bold text-lg">OJSDef</span>
         </Link>
       </div>
@@ -93,12 +92,23 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User info + logout */}
+      {/* User info + aksi akun */}
       <div className="px-3 py-4 border-t border-white/5 space-y-1">
         <div className="px-3 py-2">
           <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
           <p className="text-slate-500 text-xs truncate">{user.email}</p>
         </div>
+        <Link
+          href="/change-password"
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+            pathname === '/change-password'
+              ? 'bg-primary/10 text-primary font-medium'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <KeyRound className={`h-4 w-4 ${pathname === '/change-password' ? 'text-primary' : 'text-slate-500'}`} />
+          Ganti Password
+        </Link>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"

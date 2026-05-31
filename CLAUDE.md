@@ -49,8 +49,41 @@ Config via `globals.css` menggunakan `@theme {}` block — **bukan** `tailwind.c
 
 Install komponen baru: `npx shadcn add <component-name>`. Komponen masuk ke `components/ui/`. Jangan edit langsung file di `components/ui/` — buat wrapper di `components/shared/` jika butuh kustomisasi.
 
+## Implemented Pages
+
+```
+app/
+├── page.tsx                        — Landing page publik
+├── (auth)/
+│   ├── login/page.tsx              — Login form (satu-satunya entry point auth)
+│   ├── register/page.tsx           — Info page (tanpa form — post-MVP per PRD)
+│   └── forgot-password/page.tsx    — Info page (tanpa form — post-MVP per PRD)
+└── (dashboard)/
+    ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + Quick Insights
+    ├── scanning/page.tsx           — Scan aktif / live
+    ├── scan-management/page.tsx    — Log teknis (it_admin dan saas_admin saja)
+    ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion
+    ├── risk-scoring/page.tsx       — Risk scoring matrix
+    ├── export/page.tsx             — Ekspor laporan PDF
+    ├── change-password/page.tsx    — Ganti password
+    ├── add-target/page.tsx         — Redirect ke /targets/new
+    ├── users/page.tsx              — Kelola pengguna (saas_admin only)
+    └── targets/
+        ├── page.tsx                — Daftar semua target OJS
+        ├── new/page.tsx            — Form tambah target OJS baru
+        └── [id]/
+            ├── page.tsx            — Detail target
+            ├── verify/page.tsx     — Verifikasi domain (3-step flow)
+            └── plugin-guide/page.tsx — Panduan instalasi plugin OJSDef (4-step)
+```
+
 ## Current Status
 
-Frontend baru di-bootstrap (Next.js 16 + dependencies). Halaman dan komponen belum dibuat — masih dalam tahap setup. Mock data dan TypeScript types akan menjadi fondasi development.
+Frontend telah diimplementasikan lengkap sesuai PRD MVP:
+- Semua halaman dashboard tersedia dengan mock data dari `lib/mock-data.ts`
+- RBAC sidebar per role (`admin_ojs`, `it_admin`, `saas_admin`)
+- Design system "Flat Deep Dark" dengan Framer Motion animations
+- Auth flow via NextAuth v5 dengan 3 hardcoded users (prototype)
 
+Lihat `AGENTS.md` untuk standar detail: mock data, TypeScript types, design system, dan development patterns.
 Lihat `docs/superpowers/plans/2026-05-18-ojsdef-alignment.md` untuk rencana implementasi detail.

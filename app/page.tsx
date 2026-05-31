@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Shield,
@@ -26,9 +27,13 @@ export default function LandingPage() {
         <div className="max-w-full mx-auto h-20 px-8 flex items-center justify-between">
           {/* LEFT */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-              <Shield size={22} />
-            </div>
+            <Image
+              src="/logo-OjsDef.webp"
+              alt="OJSDef"
+              width={100}
+              height={100}
+              className="w-20 h-20 object-contain group-hover:scale-110 transition-transform"
+            />
 
             <span className="text-xl font-black tracking-tighter uppercase text-white">
               OJS<span className="text-primary">Def</span>
@@ -442,9 +447,13 @@ export default function LandingPage() {
         <div className="max-w-[1450px] mx-auto px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-                <Shield size={22} />
-              </div>
+              <Image
+                src="/logo-OjsDef.webp"
+                alt="OJSDef"
+                width={40}
+                height={40}
+                className="w-10 h-10 object-contain"
+              />
 
               <span className="text-xl font-black uppercase tracking-tighter text-white">
                 OJS<span className="text-primary">Def</span>

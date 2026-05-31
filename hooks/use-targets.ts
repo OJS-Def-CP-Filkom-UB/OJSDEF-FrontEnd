@@ -36,9 +36,10 @@ export function useDeleteTarget() {
 
 export function useVerifyTarget(targetId: string) {
   return useMutation({
-    mutationFn: (method: 'file' | 'dns') =>
+    // Backend mencoba file & DNS secara berurutan — tidak perlu kirim method di body
+    mutationFn: () =>
       api
-        .post<VerifyTargetResponse>(`/api/v1/targets/${targetId}/verify`, { method })
+        .post<VerifyTargetResponse>(`/api/v1/targets/${targetId}/verify`)
         .then((r) => r.data),
   })
 }
@@ -59,9 +60,7 @@ export function useRegenerateApiKey(targetId: string) {
   return useMutation({
     mutationFn: () =>
       api
-        .post<PluginGuideResponse>(
-          `/api/v1/targets/${targetId}/plugin-guide/regenerate-key`
-        )
+        .post<{ api_key: string }>(`/api/v1/targets/${targetId}/regenerate-key`)
         .then((r) => r.data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ['targets', targetId, 'plugin-guide'] }),

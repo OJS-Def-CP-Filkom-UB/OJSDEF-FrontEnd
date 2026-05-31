@@ -30,7 +30,7 @@ export function useStartScan() {
   return useMutation({
     mutationFn: ({ targetId, scanType }: { targetId: string; scanType: ScanType }) =>
       api
-        .post<ScanJob>(`/api/v1/targets/${targetId}/scans`, { scan_type: scanType })
+        .post<ScanJob>('/api/v1/scans', { target_id: targetId, scan_type: scanType })
         .then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['scans'] }),
   })

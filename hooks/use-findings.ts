@@ -14,16 +14,9 @@ export function useFindings(jobId: string) {
 export function useToggleFalsePositive(jobId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({
-      findingId,
-      isFalsePositive,
-    }: {
-      findingId: string
-      isFalsePositive: boolean
-    }) =>
-      api.patch(`/api/v1/scans/${jobId}/findings/${findingId}`, {
-        is_false_positive: isFalsePositive,
-      }),
+    // API spec: PATCH tanpa body — backend toggle otomatis (false→true, true→false)
+    mutationFn: (findingId: string) =>
+      api.patch<ScanFinding>(`/api/v1/scans/${jobId}/findings/${findingId}`).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['findings', jobId] }),
   })
 }

@@ -12,7 +12,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState } from 'react'
-import type { UserRole } from '@/types/api'
+import { CheckCircle, Copy, Check, AlertTriangle, X } from 'lucide-react'
+import type { CreateUserResponse, UserRole } from '@/types/api'
 
 const createUserSchema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -21,7 +22,84 @@ const createUserSchema = z.object({
 })
 type CreateUserForm = z.infer<typeof createUserSchema>
 
-function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
+// ─── Komponen tampilkan password sementara ────────────────────────────────────
+function CredentialBox({
+  result,
+  onClose,
+}: {
+  result: CreateUserResponse
+  onClose: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(result.temp_password).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="glass-dark rounded-xl border border-green-500/20 p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-green-400 shrink-0" />
+          <div>
+            <p className="text-white font-semibold">Pengguna berhasil dibuat</p>
+            <p className="text-slate-400 text-sm mt-0.5">
+              {result.full_name} &mdash; {ROLE_LABELS[result.role as UserRole]}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-300 transition-colors p-1"
+          aria-label="Tutup"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Password box */}
+      <div className="bg-slate-900/70 border border-white/10 rounded-lg p-4 space-y-2">
+        <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
+          Password Sementara
+        </p>
+        <div className="flex items-center gap-3">
+          <code className="text-lg font-mono text-cyan-300 tracking-widest flex-1 select-all">
+            {result.temp_password}
+          </code>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className="shrink-0 text-slate-400 hover:text-white hover:bg-white/5"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-green-400" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+            <span className="ml-1.5 text-xs">{copied ? 'Disalin!' : 'Salin'}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Peringatan */}
+      <div className="flex gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3">
+        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+        <p className="text-amber-300/90 text-sm leading-relaxed">
+          <strong>Password ini hanya ditampilkan sekali.</strong> Simpan dan kirimkan kepada{' '}
+          <strong>{result.email}</strong>. Pengguna wajib mengganti password saat pertama login.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Form tambah pengguna ─────────────────────────────────────────────────────
+function CreateUserForm({ onCreated }: { onCreated: (result: CreateUserResponse) => void }) {
   const createUser = useCreateUser()
   const [error, setError] = useState<string | null>(null)
 
@@ -33,9 +111,9 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
   async function onSubmit(data: CreateUserForm) {
     setError(null)
     try {
-      await createUser.mutateAsync(data)
+      const result = await createUser.mutateAsync(data)
       form.reset()
-      onSuccess()
+      onCreated(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal membuat pengguna')
     }
@@ -110,10 +188,17 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+// ─── Halaman utama ─────────────────────────────────────────────────────────────
 function UsersContent() {
   const { data: users, isLoading } = useAdminUsers()
   const updateUser = useUpdateUser()
   const [showForm, setShowForm] = useState(false)
+  const [createdUser, setCreatedUser] = useState<CreateUserResponse | null>(null)
+
+  function handleCreated(result: CreateUserResponse) {
+    setShowForm(false)
+    setCreatedUser(result)
+  }
 
   return (
     <div className="space-y-6">
@@ -123,15 +208,30 @@ function UsersContent() {
           <p className="text-slate-400 mt-1 text-sm">Manajemen akun pengguna platform OJSDef</p>
         </div>
         <Button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setShowForm(!showForm)
+            setCreatedUser(null)
+          }}
           className="bg-primary hover:bg-primary/90"
         >
           {showForm ? 'Tutup Form' : 'Tambah Pengguna'}
         </Button>
       </div>
 
-      {showForm && <CreateUserForm onSuccess={() => setShowForm(false)} />}
+      {/* Form tambah pengguna */}
+      {showForm && (
+        <CreateUserForm onCreated={handleCreated} />
+      )}
 
+      {/* Kotak kredensial — muncul setelah create berhasil, dismissable */}
+      {createdUser && (
+        <CredentialBox
+          result={createdUser}
+          onClose={() => setCreatedUser(null)}
+        />
+      )}
+
+      {/* Tabel daftar pengguna */}
       <div className="glass-dark rounded-xl border border-white/5">
         <div className="overflow-x-auto">
           {isLoading ? (
