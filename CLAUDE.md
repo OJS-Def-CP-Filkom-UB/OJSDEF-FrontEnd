@@ -61,7 +61,7 @@ app/
 └── (dashboard)/
     ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + Quick Insights
     ├── scanning/page.tsx           — Scan aktif / live
-    ├── scan-management/page.tsx    — Log teknis (it_admin dan saas_admin saja)
+    ├── scan-management/page.tsx    — Log teknis (saas_admin saja)
     ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion
     ├── risk-scoring/page.tsx       — Risk scoring matrix
     ├── export/page.tsx             — Ekspor laporan PDF
@@ -81,7 +81,7 @@ app/
 
 Frontend telah diimplementasikan lengkap sesuai PRD MVP:
 - Semua halaman dashboard tersedia dengan mock data dari `lib/mock-data.ts`
-- RBAC sidebar per role (`admin_ojs`, `it_admin`, `saas_admin`)
+- RBAC sidebar per role (`admin_ojs`, `viewer`, `saas_admin`)
 - Design system "Flat Deep Dark" dengan Framer Motion animations
 - Auth flow via NextAuth v5 dengan 3 hardcoded users (prototype)
 

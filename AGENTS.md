@@ -30,7 +30,7 @@ app/
 ├── (dashboard)/
 │   ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + 3 Quick Insights widget
 │   ├── scanning/page.tsx           — Scan aktif / live
-│   ├── scan-management/page.tsx    — Log teknis (it_admin dan saas_admin saja)
+│   ├── scan-management/page.tsx    — Log teknis (saas_admin saja)
 │   ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion (expandable)
 │   ├── risk-scoring/page.tsx       — Risk scoring matrix
 │   ├── export/page.tsx             — Ekspor laporan PDF
@@ -62,13 +62,13 @@ types/
 | Email | Password | Role |
 |-------|----------|------|
 | `admin@ub.ac.id` | `admin123` | `admin_ojs` |
-| `it@ub.ac.id` | `admin123` | `it_admin` |
+| `viewer@ub.ac.id` | `admin123` | `viewer` |
 | `admin@ojsdef.com` | `password123` | `saas_admin` |
 
 **Sidebar navigation per role (`components/layout/Sidebar.tsx`):**
 - `admin_ojs`: Beranda, Scan Aktif, Laporan Temuan, Risk Scoring, Target OJS, Ekspor (6 item)
-- `it_admin`: semua admin_ojs + Log Teknis (7 item)
-- `saas_admin`: semua it_admin + Kelola Pengguna (8 item)
+- `viewer`: Beranda, Laporan Temuan, Risk Scoring (3 item — read-only)
+- `saas_admin`: semua admin_ojs + Log Teknis, Audit Log, Kelola Pengguna (9 item)
 
 `session.user.role` diisi via JWT callback di `lib/auth.config.ts`. Gunakan `useSession()` dari `next-auth/react` untuk membaca role di client components.
 
@@ -87,7 +87,7 @@ Import data hanya dari `lib/mock-data.ts`. Jangan buat data fiktif inline di hal
 - `OJSScanType`: `"internal" | "external" | "full_audit"`
 - `PluginStatus`: `"connected" | "disconnected" | "error" | "never_connected"`
 - `RiskLevel`: `"critical" | "high" | "medium" | "low"`
-- `UserRole`: `"admin_ojs" | "it_admin" | "saas_admin"`
+- `UserRole`: `"admin_ojs" | "saas_admin" | "viewer"`
 - Interfaces: `OJSTarget`, `ScanFinding`, `ActionPlanStep`, `ScanSession`
 
 ## MVP Scope (PRD v1.2)

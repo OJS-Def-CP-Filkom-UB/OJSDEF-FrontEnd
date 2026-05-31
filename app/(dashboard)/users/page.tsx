@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminUsers, useCreateUser, useUpdateUser } from '@/hooks/use-admin'
+import { useAdminUsers, useAdminTenants, useCreateUser, useUpdateUser } from '@/hooks/use-admin'
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { ROLE_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,16 @@ const createUserSchema = z.object({
   email: z.string().email('Email tidak valid'),
   full_name: z.string().min(2, 'Nama minimal 2 karakter'),
   role: z.enum(['saas_admin', 'admin_ojs', 'viewer']),
+  tenant_id: z.string().optional(),
+  new_tenant_name: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.role === 'admin_ojs' && !data.tenant_id && !data.new_tenant_name) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Pilih institusi atau buat institusi baru untuk admin_ojs',
+      path: ['tenant_id'],
+    })
+  }
 })
 type CreateUserForm = z.infer<typeof createUserSchema>
 
@@ -101,7 +111,9 @@ function CredentialBox({
 // ─── Form tambah pengguna ─────────────────────────────────────────────────────
 function CreateUserForm({ onCreated }: { onCreated: (result: CreateUserResponse) => void }) {
   const createUser = useCreateUser()
+  const { data: tenants = [] } = useAdminTenants()
   const [error, setError] = useState<string | null>(null)
+  const [showNewTenantInput, setShowNewTenantInput] = useState(false)
 
   const form = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
@@ -172,6 +184,54 @@ function CreateUserForm({ onCreated }: { onCreated: (result: CreateUserResponse)
               </FormItem>
             )}
           />
+          {form.watch('role') === 'admin_ojs' && (
+            <FormItem className="sm:col-span-3">
+              <FormLabel className="text-slate-300">Institusi</FormLabel>
+              <FormControl>
+                <select
+                  className="w-full bg-slate-900/60 border border-white/10 text-white rounded-md px-3 py-2 text-sm"
+                  value={form.watch('tenant_id') ?? (showNewTenantInput ? '__new__' : '')}
+                  onChange={(e) => {
+                    if (e.target.value === '__new__') {
+                      form.setValue('tenant_id', undefined)
+                      setShowNewTenantInput(true)
+                    } else {
+                      form.setValue('tenant_id', e.target.value)
+                      form.setValue('new_tenant_name', undefined)
+                      setShowNewTenantInput(false)
+                    }
+                  }}
+                >
+                  <option value="">-- Pilih institusi --</option>
+                  {tenants.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                  <option value="__new__">+ Buat institusi baru</option>
+                </select>
+              </FormControl>
+            </FormItem>
+          )}
+
+          {form.watch('role') === 'admin_ojs' && showNewTenantInput && (
+            <FormField
+              control={form.control}
+              name="new_tenant_name"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-3">
+                  <FormLabel className="text-slate-300">Nama Institusi Baru</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Universitas Brawijaya"
+                      className="bg-slate-900/60 border-white/10 text-white placeholder:text-slate-500"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <div className="sm:col-span-3 flex items-center gap-3">
             {error && <p className="text-red-400 text-sm flex-1">{error}</p>}
             <Button
