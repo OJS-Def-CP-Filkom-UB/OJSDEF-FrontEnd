@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import {
   LayoutDashboard, Target, ScanLine, ShieldAlert, BarChart2,
-  Download, FileText, Users, LogOut, ChevronRight, KeyRound,
+  Download, FileText, Users, LogOut, ChevronRight, KeyRound, ClipboardList,
 } from 'lucide-react'
 import type { UserRole } from '@/types/api'
 
@@ -23,12 +23,12 @@ const BASE_NAV: NavItem[] = [
 const SCAN_NAV: NavItem = { label: 'Mulai Scan', href: '/scanning', icon: ScanLine }
 const LOG_NAV: NavItem = { label: 'Log Teknis', href: '/scan-management', icon: FileText }
 const USERS_NAV: NavItem = { label: 'Kelola Pengguna', href: '/users', icon: Users }
+const AUDIT_NAV: NavItem = { label: 'Audit Log', href: '/audit-logs', icon: ClipboardList }
 
 function getNavItems(role: UserRole): NavItem[] {
   if (role === 'viewer') return BASE_NAV
-  if (role === 'admin_ojs') return [...BASE_NAV, SCAN_NAV]
-  // saas_admin
-  return [...BASE_NAV, SCAN_NAV, LOG_NAV, USERS_NAV]
+  if (role === 'admin_ojs') return [...BASE_NAV, SCAN_NAV, LOG_NAV]
+  return [...BASE_NAV, SCAN_NAV, LOG_NAV, USERS_NAV, AUDIT_NAV]
 }
 
 export function Sidebar() {

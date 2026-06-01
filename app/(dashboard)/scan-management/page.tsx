@@ -72,7 +72,7 @@ function ScanManagementContent() {
 
 export default function ScanManagementPage() {
   return (
-    <RoleGuard allowedRoles={['saas_admin']}>
+    <RoleGuard allowedRoles={['saas_admin', 'admin_ojs']}>
       <ScanManagementContent />
     </RoleGuard>
   )
