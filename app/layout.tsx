@@ -38,7 +38,8 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html 
-      lang="en" 
+      lang="en"
+      data-scroll-behavior="smooth" 
       className={`${inter.variable} ${outfit.variable} ${jetbrains.variable} h-full antialiased dark scroll-smooth`}
     >
       <body className="min-h-full font-outfit bg-background text-foreground overflow-x-hidden selection:bg-primary/30 selection:text-white">

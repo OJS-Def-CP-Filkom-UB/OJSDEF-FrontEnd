@@ -60,20 +60,21 @@ app/
 │   └── forgot-password/page.tsx    — Info page (tanpa form — post-MVP per PRD)
 └── (dashboard)/
     ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + Quick Insights
-    ├── scanning/page.tsx           — Scan aktif / live
-    ├── scan-management/page.tsx    — Log teknis (saas_admin saja)
-    ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion
+    ├── scanning/page.tsx           — Scan aktif / live + completion banner + "Lihat Laporan" CTA
+    ├── scan-management/page.tsx    — Log teknis (saas_admin + admin_ojs tenant sendiri)
+    ├── vulnerability-report/page.tsx — Laporan temuan + badge "Positif Palsu" + Action Plan
     ├── risk-scoring/page.tsx       — Risk scoring matrix
     ├── export/page.tsx             — Ekspor laporan PDF
     ├── change-password/page.tsx    — Ganti password
     ├── add-target/page.tsx         — Redirect ke /targets/new
-    ├── users/page.tsx              — Kelola pengguna (saas_admin only)
+    ├── users/page.tsx              — Kelola pengguna (saas_admin only) + tenant selector
+    ├── audit-logs/page.tsx         — Audit log platform (saas_admin only) [BARU]
     └── targets/
         ├── page.tsx                — Daftar semua target OJS
         ├── new/page.tsx            — Form tambah target OJS baru
         └── [id]/
-            ├── page.tsx            — Detail target
-            ├── verify/page.tsx     — Verifikasi domain (3-step flow)
+            ├── page.tsx            — Detail target + plugin status card + action CTA
+            ├── verify/page.tsx     — Verifikasi domain: tabs file+DNS, instruksi copy-paste [UPDATED]
             └── plugin-guide/page.tsx — Panduan instalasi plugin OJSDef (4-step)
 ```
 
@@ -81,9 +82,13 @@ app/
 
 Frontend telah diimplementasikan lengkap sesuai PRD MVP:
 - Semua halaman dashboard tersedia dengan mock data dari `lib/mock-data.ts`
-- RBAC sidebar per role (`admin_ojs`, `viewer`, `saas_admin`)
+- RBAC sidebar per role (`admin_ojs`, `saas_admin`, `viewer`) — `it_admin` dihapus
 - Design system "Flat Deep Dark" dengan Framer Motion animations
 - Auth flow via NextAuth v5 dengan 3 hardcoded users (prototype)
+- Target detail page dengan plugin status card (badge 4 status + connection mode + troubleshoot)
+- Audit logs page untuk saas_admin (tracking semua aktivitas platform)
+- Target verification page dengan tabs file+DNS method dan instruksi copy-paste lengkap
+- Users page dengan tenant selector untuk membuat user `admin_ojs` baru
 
 Lihat `AGENTS.md` untuk standar detail: mock data, TypeScript types, design system, dan development patterns.
 Lihat `docs/superpowers/plans/2026-05-18-ojsdef-alignment.md` untuk rencana implementasi detail.

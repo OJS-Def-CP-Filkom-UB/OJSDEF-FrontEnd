@@ -65,7 +65,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/5">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Image src="/logo-OjsDef.webp" alt="OJSDef" width={32} height={32} className="h-8 w-8 object-contain" />
+          <Image src="/logo-OjsDef.webp" alt="OJSDef" loading='eager' width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="text-white font-bold text-lg">OJSDef</span>
         </Link>
       </div>

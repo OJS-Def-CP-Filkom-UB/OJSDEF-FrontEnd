@@ -32,12 +32,13 @@ export default function LandingPage() {
               alt="OJSDef"
               width={100}
               height={100}
+              loading="eager"
               className="w-20 h-20 object-contain group-hover:scale-110 transition-transform"
             />
 
-            <span className="text-xl font-black tracking-tighter uppercase text-white">
+            {/*<span className="text-xl font-black tracking-tighter uppercase text-white">
               OJS<span className="text-primary">Def</span>
-            </span>
+            </span>*/}
           </Link>
 
           {/* CENTER */}
@@ -450,14 +451,15 @@ export default function LandingPage() {
               <Image
                 src="/logo-OjsDef.webp"
                 alt="OJSDef"
-                width={40}
-                height={40}
-                className="w-10 h-10 object-contain"
+                width={100}
+                height={100}
+                loading='eager'
+                className="w-30 h-30 object-contain"
               />
 
-              <span className="text-xl font-black uppercase tracking-tighter text-white">
+              {/*<span className="text-xl font-black uppercase tracking-tighter text-white">
                 OJS<span className="text-primary">Def</span>
-              </span>
+              </span>*/}
             </Link>
 
             <div className="flex flex-wrap gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">

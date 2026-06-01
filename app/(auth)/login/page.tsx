@@ -48,7 +48,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md glass-dark rounded-xl p-8 border border-white/5">
         <div className="mb-8">
           <div className="flex flex-col items-center justify-center gap-3 mb-3">
-            <Image src="/logo-OjsDef.webp" alt="OJSDef" width={100} height={100} className="h-30 w-30 object-contain" />
+            <Image src="/logo-OjsDef.webp" alt="OJSDef" width={100} height={100} loading='eager' className="h-30 w-30 object-contain" />
             {/*<h1 className="text-2xl font-bold text-white">OJSDef</h1>*/}
           </div>
           <p className="text-slate-400 text-sm">Masuk ke dashboard keamanan OJS Anda</p>

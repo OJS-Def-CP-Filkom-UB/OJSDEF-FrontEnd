@@ -29,19 +29,22 @@ app/
 │   └── forgot-password/page.tsx    — Info page saja (tanpa form — post-MVP per PRD F-06)
 ├── (dashboard)/
 │   ├── dashboard/page.tsx          — Overview: tabel Scan Terbaru + 3 Quick Insights widget
-│   ├── scanning/page.tsx           — Scan aktif / live
-│   ├── scan-management/page.tsx    — Log teknis (saas_admin saja)
-│   ├── vulnerability-report/page.tsx — Laporan temuan + Action Plan accordion (expandable)
+│   ├── scanning/page.tsx           — Scan aktif / live + completion banner + "Lihat Laporan" CTA
+│   ├── scan-management/page.tsx    — Log teknis (saas_admin + admin_ojs tenant sendiri)
+│   ├── vulnerability-report/page.tsx — Laporan temuan + badge "Positif Palsu" + Action Plan accordion
 │   ├── risk-scoring/page.tsx       — Risk scoring matrix
 │   ├── export/page.tsx             — Ekspor laporan PDF
+│   ├── change-password/page.tsx    — Ganti password
 │   ├── targets/
 │   │   ├── page.tsx                — Daftar semua target OJS terdaftar
 │   │   ├── new/page.tsx            — Form tambah target OJS baru
 │   │   └── [id]/
-│   │       ├── verify/page.tsx     — Verifikasi domain (3-step flow)
+│   │       ├── page.tsx            — Detail target + plugin status card + action CTA berdasarkan status
+│   │       ├── verify/page.tsx     — Verifikasi domain: tabs file+DNS, instruksi copy-paste
 │   │       └── plugin-guide/page.tsx — Panduan instalasi plugin OJSDef (4-step)
 │   ├── add-target/page.tsx         — Redirect ke /targets/new (jangan dihapus)
-│   └── users/page.tsx              — Kelola pengguna placeholder (saas_admin only, Fase 2)
+│   ├── users/page.tsx              — Kelola pengguna (saas_admin only) + tenant selector
+│   └── audit-logs/page.tsx         — Audit log platform (saas_admin only) [BARU]
 ├── page.tsx                        — Landing page publik
 components/
 ├── layout/
@@ -66,9 +69,9 @@ types/
 | `admin@ojsdef.com` | `password123` | `saas_admin` |
 
 **Sidebar navigation per role (`components/layout/Sidebar.tsx`):**
-- `admin_ojs`: Beranda, Scan Aktif, Laporan Temuan, Risk Scoring, Target OJS, Ekspor (6 item)
-- `viewer`: Beranda, Laporan Temuan, Risk Scoring (3 item — read-only)
-- `saas_admin`: semua admin_ojs + Log Teknis, Audit Log, Kelola Pengguna (9 item)
+- `viewer`: Beranda, Target OJS, Laporan Keamanan, Risk Scoring, Export Laporan (5 item — read-only)
+- `admin_ojs`: semua viewer + Mulai Scan, Log Teknis (7 item)
+- `saas_admin`: semua admin_ojs + Kelola Pengguna, Audit Log (9 item)
 
 `session.user.role` diisi via JWT callback di `lib/auth.config.ts`. Gunakan `useSession()` dari `next-auth/react` untuk membaca role di client components.
 
