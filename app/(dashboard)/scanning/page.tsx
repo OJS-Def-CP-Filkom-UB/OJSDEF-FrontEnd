@@ -1,14 +1,14 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useScans, useScanJob, useStartScan } from '@/hooks/use-scans'
 import { useTargets } from '@/hooks/use-targets'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS } from '@/lib/utils'
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useState } from 'react'
 import type { ScanType } from '@/types/api'
 
 function StartScanForm() {
@@ -73,6 +73,15 @@ function StartScanForm() {
 
 function ScanJobMonitor({ jobId }: { jobId: string }) {
   const { data: job, isLoading } = useScanJob(jobId)
+  const notifiedRef = useRef(false)
+  const [showCompletedBanner, setShowCompletedBanner] = useState(false)
+
+  useEffect(() => {
+    if (job?.status === 'completed' && !notifiedRef.current) {
+      notifiedRef.current = true
+      setShowCompletedBanner(true)
+    }
+  }, [job?.status])
 
   if (isLoading) return <div className="glass-dark rounded-xl border border-white/5 p-6 animate-pulse h-40" />
   if (!job) return null
@@ -83,50 +92,68 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
     : job.status === 'completed' ? 100 : 0
 
   return (
-    <div className="glass-dark rounded-xl border border-white/5 p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-white font-semibold">Scan ID: {job.id.slice(0, 8)}…</h2>
-          <p className="text-slate-400 text-sm">{SCAN_TYPE_LABELS[job.scan_type]}</p>
+    <div className="space-y-4">
+      <div className="glass-dark rounded-xl border border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-white font-semibold">Scan ID: {job.id.slice(0, 8)}…</h2>
+            <p className="text-slate-400 text-sm">{SCAN_TYPE_LABELS[job.scan_type]}</p>
+          </div>
+          <span className={`text-sm font-medium ${SCAN_STATUS_COLORS[job.status]}`}>
+            {SCAN_STATUS_LABELS[job.status]}
+          </span>
         </div>
-        <span className={`text-sm font-medium ${SCAN_STATUS_COLORS[job.status]}`}>
-          {SCAN_STATUS_LABELS[job.status]}
-        </span>
+
+        {/* Progress bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-slate-500">
+            <span>{progress?.message ?? progress?.stage ?? (job.status === 'completed' ? 'Selesai' : 'Menunggu')}</span>
+            <span>{progressPct}%</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Counts — shown when completed */}
+        {job.status === 'completed' && (
+          <div className="grid grid-cols-4 gap-3 pt-2 border-t border-white/5">
+            <div className="text-center">
+              <p className="text-red-400 text-xl font-bold">{job.critical_count}</p>
+              <p className="text-slate-500 text-xs">Kritis</p>
+            </div>
+            <div className="text-center">
+              <p className="text-orange-400 text-xl font-bold">{job.high_count}</p>
+              <p className="text-slate-500 text-xs">Berbahaya</p>
+            </div>
+            <div className="text-center">
+              <p className="text-yellow-400 text-xl font-bold">{job.medium_count}</p>
+              <p className="text-slate-500 text-xs">Perhatian</p>
+            </div>
+            <div className="text-center">
+              <p className="text-green-400 text-xl font-bold">{job.low_count}</p>
+              <p className="text-slate-500 text-xs">Aman</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Progress bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs text-slate-500">
-          <span>{progress?.stage ?? (job.status === 'completed' ? 'Selesai' : 'Menunggu')}</span>
-          <span>{progressPct}%</span>
-        </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Counts — shown when completed */}
-      {job.status === 'completed' && (
-        <div className="grid grid-cols-4 gap-3 pt-2 border-t border-white/5">
-          <div className="text-center">
-            <p className="text-red-400 text-xl font-bold">{job.critical_count}</p>
-            <p className="text-slate-500 text-xs">Kritis</p>
-          </div>
-          <div className="text-center">
-            <p className="text-orange-400 text-xl font-bold">{job.high_count}</p>
-            <p className="text-slate-500 text-xs">Berbahaya</p>
-          </div>
-          <div className="text-center">
-            <p className="text-yellow-400 text-xl font-bold">{job.medium_count}</p>
-            <p className="text-slate-500 text-xs">Perhatian</p>
-          </div>
-          <div className="text-center">
-            <p className="text-green-400 text-xl font-bold">{job.low_count}</p>
-            <p className="text-slate-500 text-xs">Aman</p>
-          </div>
+      {/* CTA Lihat Laporan — tampil saat scan selesai */}
+      {(job.status === 'completed' || showCompletedBanner) && (
+        <div className="glass-dark rounded-xl border border-green-500/20 p-6 text-center space-y-4">
+          <p className="text-white font-semibold">Scan selesai</p>
+          <p className="text-slate-400 text-sm">
+            {(job.critical_count ?? 0) + (job.high_count ?? 0) + (job.medium_count ?? 0) + (job.low_count ?? 0)} temuan
+            · Risk score: {job.overall_score ?? '—'}
+          </p>
+          <Link href={`/vulnerability-report?jobId=${job.id}`}>
+            <Button className="bg-primary hover:bg-primary/90">
+              Lihat Laporan
+            </Button>
+          </Link>
         </div>
       )}
     </div>
