@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -7,11 +8,18 @@ import {
   CheckCircle2,
   XCircle,
   Wifi,
+  WifiOff,
+  AlertTriangle,
+  Clock,
+  ChevronDown,
+  ChevronUp,
   Plus,
   ExternalLink,
   RefreshCw,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { formatDistanceToNow } from 'date-fns'
+import { id as idLocale } from 'date-fns/locale'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -76,6 +84,72 @@ function ScanRow({ scan }: { scan: ScanJob }) {
           {SCAN_STATUS_LABELS[scan.status] ?? scan.status}
         </Badge>
       </div>
+    </div>
+  )
+}
+
+function PluginStatusCard({ target }: { target: OJSTarget }) {
+  const [showTroubleshoot, setShowTroubleshoot] = useState(false)
+
+  const config = ({
+    connected: { badge: 'Terhubung', color: 'text-green-400 bg-green-400/10 border-green-400/20', Icon: Wifi },
+    disconnected: { badge: 'Tidak Terhubung', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', Icon: WifiOff },
+    error: { badge: 'Error', color: 'text-red-400 bg-red-400/10 border-red-400/20', Icon: AlertTriangle },
+    never_connected: { badge: 'Belum Terhubung', color: 'text-slate-400 bg-slate-400/10 border-slate-400/20', Icon: WifiOff },
+  } as const)[target.plugin_status] ?? { badge: 'Tidak Diketahui', color: 'text-slate-400 bg-slate-400/10 border-slate-400/20', Icon: WifiOff }
+
+  const needsTroubleshoot = target.plugin_status === 'error' || target.plugin_status === 'disconnected'
+
+  return (
+    <div id="plugin-status" className="glass-dark rounded-xl border border-white/5 p-5 space-y-4">
+      <h3 className="text-white font-semibold text-sm">Status Plugin</h3>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <span className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border font-medium ${config.color}`}>
+          <config.Icon className="h-4 w-4" />
+          {config.badge}
+        </span>
+
+        {target.plugin_status === 'connected' && target.connection_mode && (
+          <span className="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md">
+            Mode: {target.connection_mode === 'direct' ? 'Direct' : 'Heartbeat'}
+          </span>
+        )}
+
+        {target.last_heartbeat && (
+          <span className="flex items-center gap-1.5 text-xs text-slate-500">
+            <Clock className="h-3.5 w-3.5" />
+            Terakhir aktif:{' '}
+            {formatDistanceToNow(new Date(target.last_heartbeat), { addSuffix: true, locale: idLocale })}
+          </span>
+        )}
+      </div>
+
+      {needsTroubleshoot && (
+        <div>
+          <button
+            onClick={() => setShowTroubleshoot(v => !v)}
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+          >
+            {showTroubleshoot ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            Panduan perbaikan
+          </button>
+
+          {showTroubleshoot && (
+            <ol className="mt-3 space-y-1.5 text-sm text-slate-300 list-decimal list-inside">
+              <li>Pastikan plugin OJSDef aktif di panel plugin OJS</li>
+              <li>Cek API key di konfigurasi plugin (Settings &rarr; OJSDef)</li>
+              <li>Pastikan server OJS dapat mengakses endpoint backend OJSDef</li>
+              <li>
+                Jika masih error, re-download plugin dari{' '}
+                <a href={`/targets/${target.id}/plugin-guide`} className="text-primary underline">
+                  halaman Panduan Instalasi
+                </a>
+              </li>
+            </ol>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -201,6 +275,9 @@ export default function TargetDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Plugin Status */}
+      <PluginStatusCard target={target} />
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
