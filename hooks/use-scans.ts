@@ -35,3 +35,23 @@ export function useStartScan() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['scans'] }),
   })
 }
+
+export function useCancelScan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: string) =>
+      api.post(`/api/v1/scans/${jobId}/cancel`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scans'] }),
+  })
+}
+
+export function useRetryScan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ targetId, scanType }: { targetId: string; scanType: ScanType }) =>
+      api
+        .post<ScanJob>('/api/v1/scans', { target_id: targetId, scan_type: scanType })
+        .then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scans'] }),
+  })
+}
