@@ -32,6 +32,7 @@ export const SCAN_STATUS_LABELS: Record<ScanStatus, string> = {
   running: 'Berjalan',
   completed: 'Selesai',
   failed: 'Gagal',
+  cancelled: 'Dibatalkan',
 }
 
 export const SCAN_STATUS_COLORS: Record<ScanStatus, string> = {
@@ -39,6 +40,7 @@ export const SCAN_STATUS_COLORS: Record<ScanStatus, string> = {
   running: 'text-cyan-400',
   completed: 'text-green-400',
   failed: 'text-red-400',
+  cancelled: 'text-slate-400',
 }
 
 export const SCAN_TYPE_LABELS: Record<ScanType, string> = {

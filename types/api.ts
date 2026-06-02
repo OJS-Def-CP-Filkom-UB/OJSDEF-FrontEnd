@@ -59,7 +59,7 @@ export interface PluginGuideResponse {
 
 // Scans
 export type ScanType = 'internal' | 'external' | 'full'
-export type ScanStatus = 'queued' | 'running' | 'completed' | 'failed'
+export type ScanStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low'
 export interface ScanProgress {
   stage: 'external_scan' | 'internal_audit' | 'scoring' | 'report_gen'
