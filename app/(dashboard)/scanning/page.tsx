@@ -9,7 +9,47 @@ import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS } from '@/lib/
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { ScanType } from '@/types/api'
+import type { ScanJob, ScanType } from '@/types/api'
+
+interface LogEntry {
+  time: string
+  type: 'INFO' | 'TASK' | 'DONE' | 'WARN'
+  msg: string
+}
+
+const LOG_COLOR: Record<string, string> = {
+  INFO: '#58a6ff',
+  TASK: '#e3b341',
+  DONE: '#3fb950',
+  WARN: '#f85149',
+}
+
+function getTime(): string {
+  const now = new Date()
+  return [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join(':')
+}
+
+function computeOverallPct(job: ScanJob): number {
+  if (job.status === 'completed') return 100
+  if (!job.progress) return 0
+  const { stage, current_step, total_steps } = job.progress
+  const ratio = current_step / total_steps
+  const type = job.scan_type
+  if (type === 'full') {
+    if (stage === 'external_scan') return Math.round(ratio * 40)
+    if (stage === 'internal_audit') return Math.round(40 + ratio * 30)
+    if (stage === 'scoring') return Math.round(70 + ratio * 30)
+  } else if (type === 'external') {
+    if (stage === 'external_scan') return Math.round(ratio * 80)
+    if (stage === 'scoring') return Math.round(80 + ratio * 20)
+  } else {
+    if (stage === 'internal_audit') return Math.round(ratio * 80)
+    if (stage === 'scoring') return Math.round(80 + ratio * 20)
+  }
+  return 0
+}
 
 function StartScanForm() {
   const { data: targets } = useTargets()
@@ -74,22 +114,50 @@ function StartScanForm() {
 function ScanJobMonitor({ jobId }: { jobId: string }) {
   const { data: job, isLoading } = useScanJob(jobId)
   const notifiedRef = useRef(false)
+  const prevMsgRef = useRef<string | null>(null)
+  const logRef = useRef<HTMLDivElement>(null)
   const [showCompletedBanner, setShowCompletedBanner] = useState(false)
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([])
+
+  useEffect(() => {
+    const msg = job?.progress?.message
+    if (msg && msg !== prevMsgRef.current) {
+      prevMsgRef.current = msg
+      setLogEntries((prev) => [
+        ...prev,
+        {
+          time: getTime(),
+          type: (job!.progress!.log_type ?? 'INFO') as LogEntry['type'],
+          msg,
+        },
+      ])
+    }
+  }, [job?.progress?.message])
 
   useEffect(() => {
     if (job?.status === 'completed' && !notifiedRef.current) {
       notifiedRef.current = true
       setShowCompletedBanner(true)
+      setLogEntries((prev) => {
+        const last = prev[prev.length - 1]
+        if (!last || last.msg !== 'Scan selesai') {
+          return [...prev, { time: getTime(), type: 'DONE', msg: 'Scan selesai' }]
+        }
+        return prev
+      })
     }
   }, [job?.status])
+
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
+  }, [logEntries])
 
   if (isLoading) return <div className="glass-dark rounded-xl border border-white/5 p-6 animate-pulse h-40" />
   if (!job) return null
 
-  const progress = job.progress
-  const progressPct = progress
-    ? Math.round((progress.current_step / progress.total_steps) * 100)
-    : job.status === 'completed' ? 100 : 0
+  const progressPct = computeOverallPct(job)
+  const statusLabel = job.progress?.message ?? (job.status === 'completed' ? 'Selesai' : 'Menunggu')
+  const isRunning = job.status === 'running' || job.status === 'queued'
 
   return (
     <div className="space-y-4">
@@ -107,7 +175,7 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
         {/* Progress bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs text-slate-500">
-            <span>{progress?.message ?? progress?.stage ?? (job.status === 'completed' ? 'Selesai' : 'Menunggu')}</span>
+            <span>{statusLabel}</span>
             <span>{progressPct}%</span>
           </div>
           <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
@@ -117,6 +185,71 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
             />
           </div>
         </div>
+
+        {/* Log feed */}
+        {logEntries.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              {isRunning && (
+                <div style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#00e5cc', animation: 'pulse-dot 1.5s infinite',
+                }} />
+              )}
+              <span style={{
+                fontSize: 11, color: '#8b949e',
+                textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600,
+              }}>
+                Worker Log
+              </span>
+            </div>
+            <div
+              ref={logRef}
+              style={{
+                background: '#0a0f1a',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.06)',
+                padding: '10px 14px',
+                overflowY: 'auto',
+                fontFamily: 'var(--font-geist-mono, monospace)',
+                fontSize: 11.5,
+                lineHeight: 1.8,
+                maxHeight: 200,
+              }}
+            >
+              {logEntries.map((entry, i) => {
+                const isLast = i === logEntries.length - 1
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      padding: '1px 0 1px 8px',
+                      borderLeft: isLast && isRunning ? '2px solid #00e5cc' : '2px solid transparent',
+                      background: isLast && isRunning ? 'rgba(0,229,204,0.04)' : 'transparent',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <span style={{ color: '#4a5568', marginRight: 6 }}>[{entry.time}]</span>
+                    <span style={{
+                      color: LOG_COLOR[entry.type] ?? '#8b949e',
+                      fontWeight: 700, marginRight: 4,
+                    }}>
+                      {entry.type}
+                    </span>
+                    <span style={{ color: '#c9d1d9' }}>{entry.msg}</span>
+                  </div>
+                )
+              })}
+              {isRunning && (
+                <span style={{
+                  display: 'inline-block', width: 7, height: 13,
+                  background: '#00e5cc', verticalAlign: 'text-bottom',
+                  animation: 'blink 1s infinite', borderRadius: 1, marginLeft: 2,
+                }} />
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Counts — shown when completed */}
         {job.status === 'completed' && (
@@ -141,7 +274,7 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
         )}
       </div>
 
-      {/* CTA Lihat Laporan — tampil saat scan selesai */}
+      {/* CTA Lihat Laporan */}
       {(job.status === 'completed' || showCompletedBanner) && (
         <div className="glass-dark rounded-xl border border-green-500/20 p-6 text-center space-y-4">
           <p className="text-white font-semibold">Scan selesai</p>
@@ -150,9 +283,7 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
             · Risk score: {job.overall_score ?? '—'}
           </p>
           <Link href={`/vulnerability-report?jobId=${job.id}`}>
-            <Button className="bg-primary hover:bg-primary/90">
-              Lihat Laporan
-            </Button>
+            <Button className="bg-primary hover:bg-primary/90">Lihat Laporan</Button>
           </Link>
         </div>
       )}
@@ -162,10 +293,7 @@ function ScanJobMonitor({ jobId }: { jobId: string }) {
 
 function RecentJobsList() {
   const { data: scans } = useScans({ limit: 10 })
-  const activeJob = scans?.find(
-    (s) => s.status === 'running' || s.status === 'queued'
-  )
-
+  const activeJob = scans?.find((s) => s.status === 'running' || s.status === 'queued')
   if (!activeJob) return null
   return <ScanJobMonitor jobId={activeJob.id} />
 }
@@ -180,11 +308,9 @@ function ScanningContent() {
         <h1 className="text-2xl font-bold text-white">Mulai Scan</h1>
         <p className="text-slate-400 mt-1 text-sm">Jalankan pemindaian keamanan terhadap instalasi OJS Anda</p>
       </div>
-
       <RoleGuard allowedRoles={['saas_admin', 'admin_ojs']}>
         <StartScanForm />
       </RoleGuard>
-
       {jobId ? <ScanJobMonitor jobId={jobId} /> : <RecentJobsList />}
     </div>
   )
