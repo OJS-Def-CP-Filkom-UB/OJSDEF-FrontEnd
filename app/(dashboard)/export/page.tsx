@@ -34,7 +34,7 @@ export default function ExportPage() {
         ) : !reports?.length ? (
           <div className="p-8 text-center text-slate-500">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <p>Belum ada laporan. Selesaikan scan untuk membuat laporan.</p>
+            <p>Belum ada laporan PDF. Jika scan sudah selesai namun laporan tidak muncul, coba jalankan scan ulang.</p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">
