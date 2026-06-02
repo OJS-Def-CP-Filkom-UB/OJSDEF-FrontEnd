@@ -52,6 +52,7 @@ export interface VerifyTargetResponse {
 export interface PluginGuideResponse {
   target_id: string
   api_key: string
+  backend_url: string
   endpoint: string
   instructions: string
 }
@@ -65,6 +66,7 @@ export interface ScanProgress {
   current_step: number
   total_steps: number
   message: string
+  log_type: 'INFO' | 'TASK' | 'DONE' | 'WARN'
 }
 export interface ScanJob {
   id: string

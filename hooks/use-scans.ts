@@ -20,7 +20,7 @@ export function useScanJob(jobId: string) {
     enabled: !!jobId,
     refetchInterval: (query) => {
       const status = query.state.data?.status
-      return status === 'running' || status === 'queued' ? 4000 : false
+      return status === 'running' || status === 'queued' ? 3000 : false
     },
   })
 }
