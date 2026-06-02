@@ -1,11 +1,15 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useScans } from '@/hooks/use-scans'
+import { useTargets } from '@/hooks/use-targets'
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS } from '@/lib/utils'
 
 function ScanManagementContent() {
+  const router = useRouter()
   const { data: scans, isLoading } = useScans()
+  const { data: targets } = useTargets()
 
   return (
     <div className="space-y-6">
@@ -38,12 +42,17 @@ function ScanManagementContent() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {scans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-white/2 transition-colors">
+                  <tr
+                    key={scan.id}
+                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/scan-management/${scan.id}`)}
+                  >
                     <td className="px-6 py-3 text-slate-500 font-mono text-xs">
                       {scan.id.slice(0, 8)}…
                     </td>
-                    <td className="px-6 py-3 text-slate-300 font-mono text-xs">
-                      {scan.target_id.slice(0, 8)}…
+                    <td className="px-6 py-3 text-slate-300 text-sm">
+                      {targets?.find((t) => t.id === scan.target_id)?.name ??
+                        scan.target_id.slice(0, 8) + '…'}
                     </td>
                     <td className="px-6 py-3 text-slate-400">
                       {SCAN_TYPE_LABELS[scan.scan_type]}
