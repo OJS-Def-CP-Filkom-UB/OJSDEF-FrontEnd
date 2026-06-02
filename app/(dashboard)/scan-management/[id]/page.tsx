@@ -97,8 +97,15 @@ export default function ScanDetailPage() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
   }, [logEntries])
 
+  const [cancelError, setCancelError] = useState<string | null>(null)
+
   async function handleCancel() {
-    await cancelScan.mutateAsync(jobId)
+    setCancelError(null)
+    try {
+      await cancelScan.mutateAsync(jobId)
+    } catch {
+      setCancelError('Gagal membatalkan scan. Silakan coba lagi.')
+    }
   }
 
   async function handleRetry() {
@@ -242,6 +249,7 @@ export default function ScanDetailPage() {
               {cancelScan.isPending ? 'Membatalkan...' : 'Batalkan Scan'}
             </Button>
           )}
+          {cancelError && <p className="text-red-400 text-sm w-full">{cancelError}</p>}
           {isTerminal && (
             <Button
               variant="outline"
