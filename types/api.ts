@@ -87,6 +87,8 @@ export interface ScanJob {
   high_count: number
   medium_count: number
   low_count: number
+  diagnostic_code: string | null
+  diagnostic_detail: string | null
   progress: ScanProgress | null
   created_at: string
 }
