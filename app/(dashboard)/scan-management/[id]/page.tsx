@@ -3,12 +3,13 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { useScanJob, useCancelScan, useRetryScan } from '@/hooks/use-scans'
 import { useTargets } from '@/hooks/use-targets'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { ScanJob } from '@/types/api'
+import { getDiagnosticGuide } from '@/lib/diagnostics'
 
 interface LogEntry {
   time: string
@@ -108,6 +109,8 @@ export default function ScanDetailPage() {
   const statusLabel =
     job.progress?.message ??
     (job.status === 'completed' ? 'Selesai' : SCAN_STATUS_LABELS[job.status])
+  const diagnosticGuide =
+    job.status === 'failed' ? getDiagnosticGuide(job.diagnostic_code) : null
 
   return (
     <div className="space-y-6">
@@ -223,6 +226,33 @@ export default function ScanDetailPage() {
           </div>
         )}
 
+        {diagnosticGuide && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-400" />
+              <span className="text-sm font-semibold text-red-300">
+                Diagnosa &amp; Cara Perbaiki
+              </span>
+            </div>
+            <p className="text-sm font-medium text-white">{diagnosticGuide.title}</p>
+            <ol className="list-decimal list-inside space-y-1 text-sm text-slate-300">
+              {diagnosticGuide.steps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+            {job.diagnostic_detail && (
+              <p className="text-xs text-slate-500 font-mono pt-1 border-t border-white/5">
+                Detail: {job.diagnostic_detail}
+              </p>
+            )}
+            <Link
+              href={`/targets/${job.target_id}/plugin-guide`}
+              className="inline-block text-sm text-cyan-400 hover:text-cyan-300"
+            >
+              Buka Panduan Plugin →
+            </Link>
+          </div>
+        )}
         <div className="flex flex-wrap gap-3 pt-2">
           {isRunning && (
             <Button variant="destructive" onClick={handleCancel} disabled={cancelScan.isPending}>
