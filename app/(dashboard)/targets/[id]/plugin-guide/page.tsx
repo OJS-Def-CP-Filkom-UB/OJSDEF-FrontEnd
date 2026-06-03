@@ -38,8 +38,8 @@ const STEPS = [
   },
   {
     num: 3,
-    title: 'Konfigurasi API Key',
-    desc: 'Di halaman pengaturan plugin, masukkan API Key dan Endpoint di bawah ini.',
+    title: 'Konfigurasi Kredensial',
+    desc: 'Di halaman pengaturan plugin, masukkan Backend URL, API Key, dan Target ID di bawah ini.',
   },
   {
     num: 4,
@@ -102,6 +102,14 @@ export default function PluginGuidePage({ params }: { params: Promise<{ id: stri
 
           <div className="space-y-3">
             <div>
+              <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Backend URL</p>
+              <div className="flex items-center gap-2 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2">
+                <code className="text-slate-300 text-sm flex-1 font-mono break-all">{guide.backend_url}</code>
+                <CopyButton text={guide.backend_url} />
+              </div>
+            </div>
+
+            <div>
               <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">API Key</p>
               <div className="flex items-center gap-2 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2">
                 <code className="text-cyan-400 text-sm flex-1 font-mono break-all">{guide.api_key}</code>
@@ -110,19 +118,12 @@ export default function PluginGuidePage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div>
-              <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Endpoint</p>
+              <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Target ID</p>
               <div className="flex items-center gap-2 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2">
-                <code className="text-slate-300 text-sm flex-1 font-mono break-all">{guide.endpoint}</code>
-                <CopyButton text={guide.endpoint} />
+                <code className="text-slate-300 text-sm flex-1 font-mono break-all">{guide.target_id}</code>
+                <CopyButton text={guide.target_id} />
               </div>
             </div>
-
-            {guide.instructions && (
-              <div>
-                <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Catatan Tambahan</p>
-                <p className="text-slate-400 text-sm whitespace-pre-wrap">{guide.instructions}</p>
-              </div>
-            )}
           </div>
 
           <div className="pt-2 border-t border-white/5">

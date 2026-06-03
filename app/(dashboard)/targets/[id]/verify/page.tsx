@@ -1,10 +1,38 @@
 'use client'
 
-import { use, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Copy, CheckCircle2, AlertCircle, FileText, Globe } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { Copy, CheckCircle2, AlertCircle, FileText, Globe, Loader2, CheckCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useTarget, useVerifyTarget } from '@/hooks/use-targets'
+
+type ToastState = { type: 'success' | 'error'; message: string } | null
+
+function Toast({ toast }: { toast: ToastState }) {
+  return (
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.2 }}
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border max-w-sm ${
+            toast.type === 'success'
+              ? 'bg-green-500/15 border-green-500/30 text-green-300'
+              : 'bg-red-500/15 border-red-500/30 text-red-300'
+          }`}
+        >
+          {toast.type === 'success'
+            ? <CheckCircle className="h-5 w-5 shrink-0" />
+            : <AlertCircle className="h-5 w-5 shrink-0" />}
+          <p className="text-sm">{toast.message}</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -51,27 +79,38 @@ function CodeRow({ value, highlight, small }: { value: string; highlight?: 'gree
   )
 }
 
-export default function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function VerifyPage() {
+  const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'file' | 'dns'>('file')
   const [verifyError, setVerifyError] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastState>(null)
 
   const { data: target } = useTarget(id)
   const verifyMutation = useVerifyTarget(id)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   function handleVerify() {
     setVerifyError(null)
     verifyMutation.mutate(undefined, {
       onSuccess: (data) => {
         if (data.verified) {
-          router.push(`/targets/${id}/plugin-guide`)
+          setToast({ type: 'success', message: 'Domain berhasil diverifikasi! Mengalihkan ke panduan plugin...' })
+          setTimeout(() => router.push(`/targets/${id}/plugin-guide`), 1800)
         } else {
           setVerifyError('Verifikasi belum berhasil. Pastikan file atau DNS record sudah terpasang, lalu coba lagi.')
+          setToast({ type: 'error', message: 'Verifikasi gagal. Periksa konfigurasi dan coba lagi.' })
         }
       },
       onError: () => {
-        setVerifyError('Terjadi kesalahan saat memeriksa verifikasi. Silakan coba lagi.')
+        const msg = 'Terjadi kesalahan saat memeriksa verifikasi. Silakan coba lagi.'
+        setVerifyError(msg)
+        setToast({ type: 'error', message: msg })
       },
     })
   }
@@ -94,6 +133,7 @@ export default function VerifyPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <Toast toast={toast} />
       <div>
         <h1 className="text-2xl font-bold text-white">Verifikasi Domain</h1>
         <p className="text-slate-400 text-sm mt-1">
@@ -143,7 +183,9 @@ export default function VerifyPage({ params }: { params: Promise<{ id: string }>
             disabled={verifyMutation.isPending}
             className="w-full bg-primary hover:bg-primary/90"
           >
-            {verifyMutation.isPending ? 'Memeriksa...' : 'Cek Verifikasi'}
+            {verifyMutation.isPending
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Memeriksa...</>
+              : 'Cek Verifikasi'}
           </Button>
         </div>
       ) : activeTab === 'dns' && dnsInfo ? (
@@ -176,7 +218,9 @@ export default function VerifyPage({ params }: { params: Promise<{ id: string }>
             disabled={verifyMutation.isPending}
             className="w-full bg-primary hover:bg-primary/90"
           >
-            {verifyMutation.isPending ? 'Memeriksa...' : 'Cek Verifikasi'}
+            {verifyMutation.isPending
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Memeriksa...</>
+              : 'Cek Verifikasi'}
           </Button>
         </div>
       ) : null}

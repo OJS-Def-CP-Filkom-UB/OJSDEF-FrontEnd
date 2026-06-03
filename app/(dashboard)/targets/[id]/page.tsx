@@ -311,7 +311,7 @@ export default function TargetDetailPage() {
         >
           <Plus size={14} /> Mulai Scan
         </Button>
-        <a href={`https://${target.url}`} target="_blank" rel="noreferrer">
+        <a href={`${target.url}`} target="_blank" rel="noreferrer">
           <Button
             variant="ghost"
             className="h-10 px-4 rounded-xl border border-white/5 gap-2 text-muted-foreground hover:text-white"

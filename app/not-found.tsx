@@ -55,35 +55,35 @@ const LOG_LINES = [
   {
     time: "11:08:14.120",
     level: "WARN",
-    msg: "Malformed request body detected",
+    msg: "Route not found in application router",
   },
   {
     time: "11:08:14.123",
     level: "WARN",
-    msg: "Invalid query parameter structure",
+    msg: "No matching page handler for requested path",
   },
   {
     time: "11:08:14.126",
     level: "ERR ",
-    msg: "Request validation failed",
+    msg: "404 Not Found — resource does not exist",
   },
   {
     time: "11:08:14.128",
     level: "INFO",
-    msg: "Connection terminated by gateway",
+    msg: "Rendering fallback not-found page",
   },
   {
     time: "11:08:14.131",
     level: "INFO",
-    msg: "Awaiting corrected client payload...",
+    msg: "Awaiting user navigation...",
   },
 ];
 
-export default function Error400Page() {
+export default function NotFoundPage() {
   const router = useRouter();
 
-  const glitchedCode = useGlitchText("400", 60);
-  const glitchedTitle = useGlitchText("BAD REQUEST", 30);
+  const glitchedCode = useGlitchText("404", 60);
+  const glitchedTitle = useGlitchText("NOT FOUND", 30);
 
   const [visibleLogs, setVisibleLogs] = useState(0);
   const [scanPos, setScanPos] = useState(0);
@@ -184,7 +184,7 @@ export default function Error400Page() {
             <Badge
               className="text-[9px] font-black uppercase tracking-[0.3em] h-5 px-3 bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
             >
-              INVALID REQUEST
+              NOT FOUND
             </Badge>
 
             <h1 className="text-xl font-black tracking-[0.15em] text-white/80 uppercase font-mono">
@@ -192,8 +192,7 @@ export default function Error400Page() {
             </h1>
 
             <p className="text-sm text-muted-foreground/50 font-medium max-w-sm mx-auto leading-relaxed">
-              The request could not be processed due to malformed syntax,
-              invalid parameters, or corrupted payload structure.
+              Halaman yang Anda cari tidak ditemukan atau sudah dipindahkan.
             </p>
           </div>
         </div>
@@ -215,7 +214,7 @@ export default function Error400Page() {
             />
 
             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">
-              gateway.log — request_validation
+              router.log — not_found
             </span>
 
             <div className="ml-auto flex gap-1.5">
@@ -307,7 +306,7 @@ export default function Error400Page() {
 
           <p className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground/20">
             OJS<span className="text-yellow-400/40">DEF</span>
-            {" "}— Error_400 // gateway@ojsdef.id
+            {" "}— Error_404 // router@ojsdef.id
           </p>
         </div>
       </motion.div>
