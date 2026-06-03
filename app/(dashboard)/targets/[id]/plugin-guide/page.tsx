@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import { useTarget, usePluginGuide, useRegenerateApiKey } from '@/hooks/use-targets'
 import { Button } from '@/components/ui/button'
-import { Copy, RefreshCw, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Copy, RefreshCw, ArrowLeft, CheckCircle, Download, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
 function CopyButton({ text }: { text: string }) {
@@ -24,6 +24,9 @@ function CopyButton({ text }: { text: string }) {
     </button>
   )
 }
+
+const GITHUB_PLUGIN_URL = 'https://github.com/OJS-Def-CP-Filkom-UB/OJSDEF_Plugin'
+const GITHUB_RELEASES_URL = 'https://github.com/OJS-Def-CP-Filkom-UB/OJSDEF_Plugin/releases/latest'
 
 const STEPS = [
   {
@@ -87,9 +90,31 @@ export default function PluginGuidePage({ params }: { params: Promise<{ id: stri
             <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
               {step.num}
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-white font-medium">{step.title}</h3>
               <p className="text-slate-400 text-sm mt-1">{step.desc}</p>
+              {step.num === 1 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={GITHUB_RELEASES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download ZIP (Latest Release)
+                  </a>
+                  <a
+                    href={GITHUB_PLUGIN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-white/10 text-slate-300 text-sm hover:text-white hover:border-white/20 transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Lihat Repositori GitHub
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         ))}
