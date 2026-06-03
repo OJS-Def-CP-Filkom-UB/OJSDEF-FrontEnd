@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { InternalAxiosRequestConfig } from 'axios'
 
-let _accessToken: string | null = null
+let _accessToken:    string | null          = null
+let _refreshPromise: Promise<string> | null = null
 
 export function setAccessToken(token: string | null): void {
   _accessToken = token
@@ -35,13 +36,21 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !config._retry) {
       config._retry = true
       try {
-        // Panggil internal proxy route (bukan backend langsung) agar httpOnly cookie dikirim
-        const { data } = await axios.post<{ access_token: string }>('/api/auth/refresh')
-        setAccessToken(data.access_token)
-        config.headers.Authorization = `Bearer ${data.access_token}`
+        if (!_refreshPromise) {
+          _refreshPromise = axios
+            .post<{ access_token: string }>('/api/auth/refresh')
+            .then(({ data }) => {
+              setAccessToken(data.access_token)
+              return data.access_token
+            })
+            .finally(() => { _refreshPromise = null })
+        }
+        const token = await _refreshPromise
+        config.headers.Authorization = `Bearer ${token}`
         return api(config)
       } catch {
         setAccessToken(null)
+        _refreshPromise = null
         if (typeof window !== 'undefined') window.location.href = '/login'
       }
     }
