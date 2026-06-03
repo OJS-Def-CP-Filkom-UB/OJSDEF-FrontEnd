@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useScanJob, useCancelScan, useRetryScan } from '@/hooks/use-scans'
@@ -60,38 +60,18 @@ export default function ScanDetailPage() {
   const cancelScan = useCancelScan()
   const retryScan = useRetryScan()
 
-  const [logEntries, setLogEntries] = useState<LogEntry[]>([])
-  const prevMsgRef = useRef<string | null>(null)
-  const notifiedRef = useRef(false)
   const logRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const msg = job?.progress?.message
-    if (msg && msg !== prevMsgRef.current) {
-      prevMsgRef.current = msg
-      setLogEntries((prev) => [
-        ...prev,
-        {
-          time: getTime(),
-          type: (job!.progress!.log_type ?? 'INFO') as LogEntry['type'],
-          msg,
-        },
-      ])
-    }
-  }, [job?.progress?.message])
-
-  useEffect(() => {
-    if (job?.status === 'completed' && !notifiedRef.current) {
-      notifiedRef.current = true
-      setLogEntries((prev) => {
-        const last = prev[prev.length - 1]
-        if (!last || last.msg !== 'Scan selesai') {
-          return [...prev, { time: getTime(), type: 'DONE', msg: 'Scan selesai' }]
-        }
-        return prev
-      })
-    }
-  }, [job?.status])
+  const logEntries = useMemo<LogEntry[]>(() => {
+    const log = job?.progress?.log ?? []
+    return log.map((entry) => ({
+      time: new Date(entry.ts * 1000).toLocaleTimeString('id-ID', {
+        hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }),
+      type: (entry.type ?? 'INFO') as LogEntry['type'],
+      msg:  entry.msg,
+    }))
+  }, [job?.progress?.log])
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
