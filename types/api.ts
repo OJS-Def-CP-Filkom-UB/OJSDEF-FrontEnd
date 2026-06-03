@@ -61,12 +61,20 @@ export interface PluginGuideResponse {
 export type ScanType = 'internal' | 'external' | 'full'
 export type ScanStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low'
+export interface ScanProgressEntry {
+  step:  number
+  stage: string
+  msg:   string
+  type:  string
+  ts:    number
+}
 export interface ScanProgress {
-  stage: 'external_scan' | 'internal_audit' | 'scoring' | 'report_gen'
+  stage:        string
   current_step: number
-  total_steps: number
-  message: string
-  log_type: 'INFO' | 'TASK' | 'DONE' | 'WARN'
+  total_steps:  number
+  message:      string
+  log_type?:    string
+  log?:         ScanProgressEntry[]
 }
 export interface ScanJob {
   id: string
