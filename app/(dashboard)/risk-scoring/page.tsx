@@ -7,18 +7,17 @@ import { SEVERITY_LABELS, SEVERITY_COLORS, SEVERITY_BG_COLORS } from '@/lib/util
 import { ShieldAlert, ShieldCheck, Shield, ShieldOff } from 'lucide-react'
 
 function ScoreDisplay({ score, label }: { score: number | null; label: string }) {
-  const normalized = score != null ? Math.max(0, Math.min(10, score)) : null
   const color =
-    normalized == null ? 'text-slate-400'
-    : normalized >= 9 ? 'text-red-400'
-    : normalized >= 7 ? 'text-orange-400'
-    : normalized >= 4 ? 'text-yellow-400'
+    score == null ? 'text-slate-400'
+    : score <= 25 ? 'text-red-400'
+    : score <= 50 ? 'text-orange-400'
+    : score <= 75 ? 'text-yellow-400'
     : 'text-green-400'
 
   return (
     <div className="glass-dark rounded-xl border border-white/5 p-8 text-center">
       <p className={`text-7xl font-black ${color}`}>
-        {normalized != null ? normalized.toFixed(1) : '—'}
+        {score != null ? score.toFixed(1) : '—'}
       </p>
       <p className="text-slate-400 mt-3 text-sm">{label}</p>
     </div>
@@ -40,7 +39,7 @@ function RiskMatrix({ jobId }: { jobId: string }) {
 
   return (
     <div className="space-y-6">
-      <ScoreDisplay score={job.overall_score} label="Skor Risiko Keseluruhan (CVSS)" />
+      <ScoreDisplay score={job.overall_score} label="Skor Risiko Keseluruhan (0–100)" />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {counts.map(({ label, count, color, bg, Icon }) => (
