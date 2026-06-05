@@ -86,7 +86,7 @@ function RiskScoringContent() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Risk Scoring</h1>
-        <p className="text-slate-400 mt-1 text-sm">Skor risiko CVSS berdasarkan hasil pemindaian</p>
+        <p className="text-slate-400 mt-1 text-sm">Skor risiko keseluruhan berdasarkan hasil pemindaian</p>
       </div>
 
       {jobId ? <RiskMatrix jobId={jobId} /> : <AutoSelectJob />}
