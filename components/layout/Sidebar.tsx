@@ -21,7 +21,7 @@ const BASE_NAV: NavItem[] = [
 ]
 
 const SCAN_NAV: NavItem = { label: 'Mulai Scan', href: '/scanning', icon: ScanLine }
-const LOG_NAV: NavItem = { label: 'Log Teknis', href: '/scan-management', icon: FileText }
+const LOG_NAV: NavItem = { label: 'Log Scan', href: '/scan-management', icon: FileText }
 const USERS_NAV: NavItem = { label: 'Kelola Pengguna', href: '/users', icon: Users }
 const AUDIT_NAV: NavItem = { label: 'Audit Log', href: '/audit-logs', icon: ClipboardList }
 

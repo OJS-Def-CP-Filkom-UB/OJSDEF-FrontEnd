@@ -5,9 +5,9 @@
 
 | Atribut | Nilai |
 |---|---|
-| Versi Dokumen | 1.0 |
+| Versi Dokumen | 1.2 |
 | Status | Draft for Review |
-| Tanggal | April 2026 |
+| Tanggal | Mei 2026 |
 | Topik | G2 — OJS Integrated Security Scanner |
 | Mitra | Seclab Indonesia |
 | Institusi | Universitas Brawijaya — Fakultas Ilmu Komputer |
@@ -32,6 +32,30 @@
 12. [Batasan & Di Luar Scope](#12-batasan--di-luar-scope)
 13. [Glosarium](#13-glosarium)
 14. [Riwayat Revisi Dokumen](#14-riwayat-revisi-dokumen)
+
+---
+
+> **CATATAN IMPLEMENTASI — Update 3 Juni 2026**
+>
+> Dokumen ini merupakan PRD asli + sinkronisasi implementasi per Juni 2026. Setiap penyimpangan dari spec original diberi catatan inline. Ringkasan status:
+>
+> | Komponen | Status | Catatan |
+> |---|---|---|
+> | **Backend (FastAPI + Celery)** | ✅ IMPLEMENTED | Core fitur berjalan; 4 migrations applied |
+> | **Plugin PHP v1.0.1** | ✅ IMPLEMENTED | 6 scanner modules; 19 unit tests passing |
+> | **Frontend (Next.js 16)** | 🔶 PROTOTYPE | Semua halaman ada, mock data — backend integration belum |
+> | **Frontend–Backend integration** | ❌ BELUM | TanStack Query hooks & real API calls belum disambungkan |
+> | **Scan Scheduling (F-45)** | ⏸ DEFERRED Fase 2 | Model DB ada, Celery Beat auto-scan belum aktif |
+> | **DB Security Check (F-18)** | ⏸ DEFERRED Fase 2 | P2 — tidak diimplementasikan di plugin v1.0.1 |
+> | **Weak Credentials Detector (F-19)** | ⏸ DEFERRED Fase 2 | P2 — tidak diimplementasikan |
+> | **API Security Testing (F-27)** | ⏸ DEFERRED Fase 2 | P2 — tidak diimplementasikan di external bot |
+> | **Self-register / Forgot Password** | ⏸ DEFERRED Fase 2 | Per spec MVP — halaman frontend hanya info page |
+>
+> **Perubahan signifikan dari spec original:**
+> - Role `it_admin` **dihapus** — digantikan oleh `admin_ojs` (mencakup fungsi IT) + `viewer` (role read-only baru, tidak ada di spec awal)
+> - Frontend menggunakan **Next.js 16 / React 19 / Tailwind v4** (bukan Next.js 14/React 18/Tailwind v3)
+> - Plugin connection menggunakan **Hybrid A+C protocol** (`connection_mode`: direct/heartbeat/unknown) — bukan boolean `plugin_connected`
+> - External scanner tambahan: `cookie_analyzer` (tidak ada di spec original)
 
 ---
 
@@ -123,8 +147,9 @@ OJSDef memiliki beberapa segmen pengguna dengan kebutuhan dan tingkat akses yang
 | Stakeholder | Peran | Kebutuhan Utama | Hak Akses |
 |---|---|---|---|
 | **Admin OJS** | Primary User | Dashboard risiko, action plan perbaikan, notifikasi ancaman | Full — Scan, laporan, konfigurasi target |
-| **Tim IT / DevOps** | Primary User | Log teknis detail, jadwal scan off-peak, patch guidance level server | Full — Termasuk jadwal scan & log sistem |
+| **Tim IT / DevOps** | Primary User | Log teknis detail, jadwal scan off-peak, patch guidance level server | **[IMPLEMENTASI]** Role `it_admin` dihapus — fungsi IT kini masuk ke `admin_ojs`. |
 | **SaaS Provider Admin** | Platform Admin | Update CVE database, manajemen tenant, enkripsi data klien | Super Admin — Kelola semua tenant |
+| **Viewer** | Read-Only User | **[BARU — tidak ada di spec awal]** | Read-only: dashboard, laporan, risk scoring. Tidak bisa trigger scan. Role `viewer` ditambahkan saat implementasi. |
 | **Editor & Reviewer** | End User OJS | Keamanan akun (weak password, role misconfiguration) | Baca saja — Notifikasi terkait akun |
 | **Author (Penulis)** | End User OJS | Integritas naskah, bebas dari malware pada file yang diunduh | Tidak langsung — Dilindungi sistem |
 | **Pembaca (Publik)** | End User OJS | Aman dari defacement dan malware pada PDF unduhan | Tidak langsung — Dilindungi sistem |
@@ -222,8 +247,8 @@ Plugin PHP yang ter-install di OJS target berkomunikasi dengan API Gateway OJSDe
 | F-15 | RBAC Auditor | Audit user roles: privilege berlebih, akun tidak aktif dengan role tinggi | P1 |
 | F-16 | File Integrity Checker | Bandingkan SHA-256 hash file OJS vs checksums resmi dari OJS GitHub release | P1 |
 | F-17 | Content Injection Detector | Deteksi konten ilegal di DB OJS: URL judi, iframe tersembunyi, script redirect | P1 |
-| F-18 | Database Security Check | Cek credential lemah, backup .sql exposed, konfigurasi DB tidak aman | P2 |
-| F-19 | Weak Credentials Detector | Deteksi password lemah pada akun admin OJS | P2 |
+| F-18 | Database Security Check | Cek credential lemah, backup .sql exposed, konfigurasi DB tidak aman | P2 **⏸ DEFERRED Fase 2 — tidak diimplementasikan di plugin v1.0.1** |
+| F-19 | Weak Credentials Detector | Deteksi password lemah pada akun admin OJS | P2 **⏸ DEFERRED Fase 2 — tidak diimplementasikan di plugin v1.0.1** |
 
 ### 6.4 Modul External Security Scan (Bot Ofensif)
 
@@ -238,7 +263,7 @@ Bot berjalan sepenuhnya dari server OJSDef, passive/read-only, rate limit 10 req
 | F-24 | Vulnerability Scanner (Passive) | Passive OWASP Top 10: reflected XSS, SQL injection, path traversal, CSRF | P1 |
 | F-25 | Open Directory Detection | Deteksi direktori/file sensitif public tanpa autentikasi | P1 |
 | F-26 | CVE Matching | Match versi OJS + plugin vs NVD CVE database | P1 |
-| F-27 | API Security Testing | Audit endpoint API publik OJS: unauthenticated access, data leakage | P2 |
+| F-27 | API Security Testing | Audit endpoint API publik OJS: unauthenticated access, data leakage | P2 **⏸ DEFERRED Fase 2 — tidak diimplementasikan di external bot MVP** |
 
 ### 6.5 Modul Risk Scoring Engine
 
@@ -390,11 +415,14 @@ Bot berjalan sepenuhnya dari server OJSDef, passive/read-only, rate limit 10 req
 
 | Layer | Teknologi | Justifikasi |
 |---|---|---|
-| **Frontend** | Next.js 14 (App Router + RSC) | Ekosistem matang; SSR optimal; App Router untuk performa |
+| **Frontend** | ~~Next.js 14~~ **Next.js 16.2.3** (App Router + RSC) | Versi aktual implementasi menggunakan 16 (bukan 14 per spec awal) |
+| **React** | ~~React 18~~ **React 19.2.4** | Versi aktual, menyertai upgrade Next.js 16 |
+| **CSS Framework** | ~~Tailwind CSS v3~~ **Tailwind CSS v4** (CSS-first, no config file) | v4 menggunakan `@theme {}` block di `globals.css`, tidak ada `tailwind.config.js` |
 | **UI Components** | shadcn/ui + Radix UI | Accessible; customizable; tidak lock-in |
-| **Data Fetching** | TanStack Query v5 | Server state management terbaik untuk React |
-| **Global State** | Zustand | Lightweight; tidak boilerplate; cocok untuk auth state |
-| **Visualisasi** | Recharts | Library chart React yang mature dan customizable |
+| **Data Fetching** | TanStack Query v5 | Server state management terbaik untuk React — *belum terhubung ke backend (prototype)* |
+| **Global State** | Zustand | Lightweight; tidak boilerplate; cocok untuk auth state — *opsional, belum diimplementasikan* |
+| **Visualisasi** | Recharts v3 | Library chart React yang mature dan customizable |
+| **Auth** | NextAuth v5 beta.25 (Credentials provider) | Hardcoded prototype users — akan diganti JWT backend saat integrasi |
 | **Backend** | FastAPI 0.110 + Uvicorn | Async Python native; auto OpenAPI docs; Pydantic v2 |
 | **ORM** | SQLAlchemy 2.0 (async) | Mature; production-ready; native async support |
 | **Migrations** | Alembic | Standard migration tool untuk SQLAlchemy |
@@ -541,6 +569,7 @@ Bot berjalan sepenuhnya dari server OJSDef, passive/read-only, rate limit 10 req
 | 1.0 | April 2026 | Kelompok 3 — Topik G2 | Versi awal PRD berdasarkan Laporan Lembar Kerja 2, diperluas dengan detail arsitektur dua arah (internal plugin + external bot), user stories, risk matrix, technology stack, dan roadmap 3 fase. |
 | 1.1 | Mei 2026 | Kelompok 3 — Topik G2 | Revisi scope MVP berdasarkan diskusi konsistensi PRD-SRS: (1) Ubah F-02 Register menjadi SaaS Admin create account — tidak ada self-register pada MVP; (2) F-06 reset password oleh SaaS Admin pada MVP; (3) F-42 dibatasi JSON only — HTML deferred; (4) F-45 Scan Scheduling di-defer ke Fase 2; (5) F-11 subscription tiers di-defer ke Fase 3; (6) Tambah catatan scope MVP di Roadmap Fase 1. |
 | 1.2 | Mei 2026 | Kelompok 3 — Topik G2 | Penyelarasan minor issues PRD-SRS: (1) F-32 label dashboard diubah urutan Kritis→Berbahaya→Perhatian→Aman; (2) Stakeholder Pimpinan Institusi diklarifikasi — tidak ada system role pada MVP, laporan diserahkan manual via admin_ojs, role `read_only` dipertimbangkan Fase 2; (3) US-13 ditambah catatan mekanisme penyerahan PDF via admin_ojs; (4) NFR mobile (NFR-15b) ditambahkan — best effort via Tailwind + shadcn/ui; (5) NFR concurrent users ditambahkan — 20+ untuk MVP, 100+ target Fase 2; (6) Section 5.3 ditambah catatan scheduling deferred dari MVP. |
+| 1.3 | Juni 2026 | Kelompok 3 — Topik G2 | Sinkronisasi implementasi aktual: (1) Tambah section Catatan Implementasi dengan tabel status fitur; (2) Role `it_admin` dihapus — digantikan `admin_ojs` + `viewer` baru; (3) Tech stack diperbarui ke versi aktual (Next.js 16, React 19, Tailwind v4); (4) Tabel Stakeholder diperbarui untuk mencerminkan perubahan role; (5) F-18, F-19, F-27 ditandai DEFERRED Fase 2; (6) Plugin connection protocol diklarifikasi sebagai Hybrid A+C (connection_mode: direct/heartbeat/unknown). |
 
 ---
 

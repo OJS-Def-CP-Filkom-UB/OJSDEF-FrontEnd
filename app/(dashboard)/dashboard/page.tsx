@@ -1,11 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useDashboardStats } from '@/hooks/use-dashboard'
 import { useScans } from '@/hooks/use-scans'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS, SEVERITY_LABELS, SEVERITY_COLORS } from '@/lib/utils'
-import { ShieldCheck, Target, ScanLine, AlertTriangle } from 'lucide-react'
+import { ShieldCheck, Target, ScanLine, AlertTriangle, Info } from 'lucide-react'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: recentScans, isLoading: scansLoading } = useScans({ limit: 5 })
 
@@ -56,11 +58,20 @@ export default function DashboardPage() {
           {statsLoading ? (
             <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
           ) : (
-            <p className="text-3xl font-bold text-white">
-              {stats?.security_posture.average_score != null
-                ? stats.security_posture.average_score.toFixed(1)
-                : '—'}
-            </p>
+            <>
+              <p className="text-3xl font-bold text-white">
+                {stats?.security_posture.average_score != null
+                  ? stats.security_posture.average_score.toFixed(1)
+                  : '—'}
+              </p>
+              <div
+                className="flex items-center gap-1 text-slate-600 text-xs mt-1"
+                title="Rata-rata dari semua sesi scan yang selesai dalam 30 hari terakhir. Satu target yang di-scan berkali-kali dihitung tiap sesinya. Berbeda dengan skor per-sesi di halaman Risk Scoring."
+              >
+                <Info className="h-3 w-3 shrink-0" />
+                <span>Rata-rata semua sesi scan (30 hari)</span>
+              </div>
+            </>
           )}
         </div>
 
@@ -74,7 +85,10 @@ export default function DashboardPage() {
           {statsLoading ? (
             <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
           ) : (
-            <p className="text-3xl font-bold text-white">{stats?.findings_summary.critical ?? 0}</p>
+            <>
+              <p className="text-3xl font-bold text-white">{stats?.findings_summary.critical ?? 0}</p>
+              <p className="text-slate-600 text-xs mt-1">Akumulasi dari semua scan aktif</p>
+            </>
           )}
         </div>
       </div>
@@ -106,7 +120,11 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {recentScans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-white/2 transition-colors">
+                  <tr
+                    key={scan.id}
+                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/scan-management/${scan.id}`)}
+                  >
                     <td className="px-6 py-4 text-slate-300">{scan.target_id}</td>
                     <td className="px-6 py-4 text-slate-400">{SCAN_TYPE_LABELS[scan.scan_type]}</td>
                     <td className="px-6 py-4">

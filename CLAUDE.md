@@ -80,15 +80,23 @@ app/
 
 ## Current Status
 
-Frontend telah diimplementasikan lengkap sesuai PRD MVP:
+**State: Prototype (mock data) — Backend integration BELUM diimplementasikan.**
+
+Frontend telah diimplementasikan lengkap sesuai PRD MVP sebagai prototype:
 - Semua halaman dashboard tersedia dengan mock data dari `lib/mock-data.ts`
-- RBAC sidebar per role (`admin_ojs`, `saas_admin`, `viewer`) — `it_admin` dihapus
+- RBAC sidebar per role (`admin_ojs`, `saas_admin`, `viewer`) — `it_admin` dihapus dari spec
 - Design system "Flat Deep Dark" dengan Framer Motion animations
-- Auth flow via NextAuth v5 dengan 3 hardcoded users (prototype)
+- Auth flow via NextAuth v5 dengan 3 hardcoded users (prototype — bukan koneksi ke API backend)
 - Target detail page dengan plugin status card (badge 4 status + connection mode + troubleshoot)
 - Audit logs page untuk saas_admin (tracking semua aktivitas platform)
 - Target verification page dengan tabs file+DNS method dan instruksi copy-paste lengkap
 - Users page dengan tenant selector untuk membuat user `admin_ojs` baru
 
+**Yang belum diimplementasikan (integrasi backend — next phase):**
+- Koneksi ke FastAPI backend — semua data saat ini hardcoded di `lib/mock-data.ts`
+- TanStack Query hooks untuk real API calls ke backend
+- Auth via JWT backend (saat ini NextAuth dengan hardcoded users)
+- Real-time scan progress dari Redis/SSE
+- Notifikasi aktif setelah scan selesai
+
 Lihat `AGENTS.md` untuk standar detail: mock data, TypeScript types, design system, dan development patterns.
-Lihat `docs/superpowers/plans/2026-05-18-ojsdef-alignment.md` untuk rencana implementasi detail.

@@ -7,8 +7,8 @@
 |---|---|
 | Versi Dokumen | 1.0 |
 | Status | Draft for Internal Review |
-| Tanggal | April 2026 |
-| Berdasarkan | PRD OJSDef v1.0 |
+| Tanggal | Mei 2026 |
+| Berdasarkan | PRD OJSDef v1.2 |
 | Mitra | Seclab Indonesia |
 | Institusi | Universitas Brawijaya — Fakultas Ilmu Komputer |
 | Tim | Kelompok 3 — Topik G2 |
@@ -32,6 +32,34 @@
 12. [Pengujian & Kriteria Penerimaan](#12-pengujian--kriteria-penerimaan)
 13. [Batasan & Risiko Teknis](#13-batasan--risiko-teknis)
 14. [Glosarium](#14-glosarium)
+
+---
+
+> **CATATAN IMPLEMENTASI — Update 3 Juni 2026**
+>
+> Dokumen ini merupakan SRS asli + sinkronisasi implementasi per Juni 2026. Perubahan teknis dari spec original ditandai `[IMPLEMENTASI]` atau `[DEFERRED]` secara inline.
+>
+> | Area | Status | Catatan Implementasi |
+> |---|---|---|
+> | **Backend API (FastAPI)** | ✅ IMPLEMENTED | Semua router: auth, targets, scans, reports, dashboard, admin, audit_logs, plugin_callback |
+> | **Database (PostgreSQL + RLS)** | ✅ IMPLEMENTED | 4 migrations applied; ERD aktual berbeda dari spec (lihat Section 4) |
+> | **Celery Workers (4 queues)** | ✅ IMPLEMENTED | internal_scan, external_scan, scoring, notifications |
+> | **Plugin PHP v1.0.1** | ✅ IMPLEMENTED | 6 dari 8 scanner modules di spec (FR-INT-07 & FR-INT-08 deferred) |
+> | **External Bot (8 modul)** | ✅ IMPLEMENTED | + cookie_analyzer (tidak ada di spec); FR-EXT-08 deferred |
+> | **Frontend (Next.js 16)** | 🔶 PROTOTYPE | UI lengkap tapi mock data — backend integration belum |
+> | **Celery Beat (scan scheduling)** | ⏸ DEFERRED Fase 2 | Model `scan_schedules` ada di DB tapi tidak aktif |
+> | **DB Security Check (FR-INT-07)** | ⏸ DEFERRED Fase 2 | P2 — tidak ada di plugin v1.0.1 |
+> | **Weak Credentials (FR-INT-08)** | ⏸ DEFERRED Fase 2 | P2 — tidak ada di plugin v1.0.1 |
+> | **API Security Testing (FR-EXT-08)** | ⏸ DEFERRED Fase 2 | P2 — tidak ada di external bot |
+>
+> **Deviasi teknis dari spec (ringkasan):**
+> - Role `it_admin` **dihapus**; role `viewer` (read-only) **ditambahkan** — lihat Section 2.3 dan 4.1
+> - `ojs_targets.plugin_connected` (boolean) digantikan `connection_mode` (enum: direct/heartbeat/unknown)
+> - Kolom baru di `ojs_targets`: `trigger_endpoint`, `probe_endpoint`, `pending_scan_job_id`, `force_heartbeat`
+> - Kolom baru di `scan_jobs`: `diagnostic_code`, `diagnostic_detail`
+> - Kolom baru di `audit_logs`: `user_email` (nullable), `tenant_id` dibuat nullable
+> - Frontend menggunakan **Next.js 16 / React 19 / Tailwind v4** (bukan Next.js 14/React 18/Tailwind v3)
+> - Plugin protocol menggunakan **Hybrid A+C** — lihat Section 3.3.2 yang ditambahkan
 
 ---
 
@@ -115,9 +143,10 @@ Interaksi dengan OJS terjadi melalui dua mekanisme:
 
 | Role | Karakteristik | Hak Akses |
 |---|---|---|
-| `admin_ojs` | Pengelola jurnal, mungkin non-teknis | Scan, dashboard, report, kelola target & notifikasi |
-| `it_admin` | Tim IT/DevOps server OJS | Semua `admin_ojs` + akses audit log teknis detail (FR-LOG-01/02). Jadwal scan diimplementasikan pada Fase 2. |
-| `saas_admin` | Administrator platform OJSDef | Super admin: kelola semua tenant, update CVE, monitoring |
+| `admin_ojs` | Pengelola jurnal, mungkin non-teknis | Scan, dashboard, report, kelola target & notifikasi, log teknis |
+| ~~`it_admin`~~ | **[DIHAPUS saat implementasi]** — fungsinya digabung ke `admin_ojs` | Role ini tidak ada di sistem. Tim IT menggunakan role `admin_ojs`. |
+| `saas_admin` | Administrator platform OJSDef | Super admin: kelola semua tenant, kelola user, audit log platform |
+| `viewer` | **[BARU saat implementasi — tidak ada di spec awal]** Read-only user | Lihat dashboard, laporan, risk scoring. Tidak bisa trigger scan atau kelola target. |
 
 ### 2.4 Batasan Sistem
 
@@ -267,29 +296,35 @@ Entry point tunggal untuk semua request. Bertanggung jawab atas:
 
 Plugin PHP ter-install di OJS dan mengirimkan payload JSON via HTTPS POST ke `/plugin/v1/callback`. Semua request ditandatangani HMAC-SHA256. Worker memproses:
 
-| Modul | Data yang Diproses |
-|---|---|
-| Config Scanner | config.inc.php — debug mode, error reporting, secret key strength |
-| Plugin Auditor | Plugin list — versi, CVE match, disabled-but-installed |
-| RBAC Auditor | User + roles — privilege excess, inactive privileged accounts |
-| File Integrity | SHA-256 file hash vs OJS official release checksums |
-| Content Detector | DB articles — regex pattern judi/malware/iframe/redirect |
-| DB Security | Credential strength, backup file exposure, SQL mode |
+| Modul | Data yang Diproses | Status |
+|---|---|---|
+| Config Scanner | config.inc.php — debug mode, error reporting, secret key strength | ✅ IMPLEMENTED |
+| Plugin Auditor | Plugin list — versi, CVE match, disabled-but-installed | ✅ IMPLEMENTED |
+| RBAC Auditor | User + roles — privilege excess, inactive privileged accounts | ✅ IMPLEMENTED |
+| File Integrity | SHA-256 file hash vs OJS official release checksums | ✅ IMPLEMENTED |
+| Content Detector | DB articles — regex pattern judi/malware/iframe/redirect | ✅ IMPLEMENTED |
+| DB Security | Credential strength, backup file exposure, SQL mode | ⏸ **DEFERRED Fase 2** (FR-INT-07, P2) |
+
+> **[IMPLEMENTASI]** Plugin protocol menggunakan **Hybrid A+C** (tidak ada di spec awal). Backend mendeteksi apakah plugin reachable dari luar untuk menentukan `connection_mode`:
+> - `direct`: backend POST ke `/ojsdef/trigger` → plugin scan → callback
+> - `heartbeat`: backend set `scan_requested=true` di response heartbeat → plugin scan → callback
+> - `unknown`: mode awal, backend probe `/ojsdef/probe` untuk deteksi otomatis
 
 #### 3.3.4 External Bot Worker — Scanner Modules
 
 Berjalan sepenuhnya dari server OJSDef, passive/read-only:
 
-| Modul | Library Python | Yang Diperiksa |
-|---|---|---|
-| OJS Fingerprinting | `requests`, `BeautifulSoup4` | Versi OJS dari HTTP headers, meta tags, URL patterns |
-| Endpoint Discovery | `requests`, `lxml` | Public endpoints, sitemaps, form actions |
-| SSL/TLS Analysis | `ssl`, `pyopenssl`, `cryptography` | Cert validity, expiry, cipher suites, TLS version |
-| HTTP Headers | `requests` | CSP, X-Frame-Options, HSTS, Referrer-Policy |
-| Passive Vuln Probe | `requests`, `re` | Reflected XSS, SQL error disclosure, path traversal |
-| Open Dir Detection | `requests` | /backup/, /.git/, .env, phpinfo.php, config files |
-| CVE Matching | `nvdlib` | OJS + plugin version vs NVD CVE database |
-| API Security | `requests` | Unauthenticated API endpoint, IDOR indicators |
+| Modul | Library Python | Yang Diperiksa | Status |
+|---|---|---|---|
+| OJS Fingerprinting | `requests`, `BeautifulSoup4` | Versi OJS dari HTTP headers, meta tags, URL patterns | ✅ IMPLEMENTED |
+| Endpoint Discovery | `requests`, `lxml` | Public endpoints, sitemaps, form actions | ✅ IMPLEMENTED |
+| SSL/TLS Analysis | `ssl`, `pyopenssl`, `cryptography` | Cert validity, expiry, cipher suites, TLS version | ✅ IMPLEMENTED |
+| HTTP Headers | `requests` | CSP, X-Frame-Options, HSTS, Referrer-Policy | ✅ IMPLEMENTED |
+| Passive Vuln Probe | `requests`, `re` | Reflected XSS, SQL error disclosure, path traversal | ✅ IMPLEMENTED |
+| Open Dir Detection | `requests` | /backup/, /.git/, .env, phpinfo.php, config files | ✅ IMPLEMENTED |
+| CVE Matching | `nvdlib` | OJS + plugin version vs NVD CVE database | ✅ IMPLEMENTED |
+| Cookie Analyzer | `requests` | **[BARU — tidak ada di spec]** Cookie security flags (Secure, HttpOnly, SameSite) | ✅ IMPLEMENTED |
+| API Security | `requests` | Unauthenticated API endpoint, IDOR indicators | ⏸ **DEFERRED Fase 2** (FR-EXT-08, P2) |
 
 ### 3.4 Flow Arsitektur Keseluruhan
 
@@ -368,7 +403,7 @@ erDiagram
         varchar email UK
         text password_hash
         varchar full_name
-        enum role "admin_ojs|it_admin|saas_admin"
+        enum role "admin_ojs|saas_admin|viewer [IMPLEMENTASI: it_admin dihapus, viewer ditambahkan]"
         boolean is_active
         boolean notif_email
         boolean notif_telegram
@@ -385,12 +420,16 @@ erDiagram
         varchar name
         varchar verification_token
         boolean is_verified
-        text plugin_api_key "encrypted"
-        boolean plugin_connected
+        text plugin_api_key_encrypted "AES-256-GCM"
         varchar ojs_version
         timestamptz plugin_last_seen
         timestamptz last_scan_at
         timestamptz created_at
+        varchar trigger_endpoint "[BARU: migration 002] URL /ojsdef/trigger di OJS target"
+        varchar probe_endpoint "[BARU: migration 002] URL /ojsdef/probe untuk test reachability"
+        varchar connection_mode "[BARU: migration 002] direct|heartbeat|unknown — gantikan plugin_connected boolean"
+        uuid pending_scan_job_id "[BARU: migration 002] job menunggu heartbeat mode"
+        boolean force_heartbeat "[BARU: migration 004] override paksa mode heartbeat"
     }
 
     scan_jobs {
@@ -408,6 +447,8 @@ erDiagram
         int medium_count
         int low_count
         text error_message
+        varchar diagnostic_code "[BARU: migration 004] kode error singkat (mis: plugin_unreachable)"
+        text diagnostic_detail "[BARU: migration 004] pesan error detail untuk debugging"
         timestamptz started_at
         timestamptz completed_at
     }
@@ -466,8 +507,9 @@ erDiagram
 
     audit_logs {
         uuid id PK
-        uuid user_id FK
-        uuid tenant_id FK
+        uuid user_id FK "nullable"
+        uuid tenant_id FK "[IMPLEMENTASI: migration 003] dibuat nullable untuk system events"
+        varchar user_email "[BARU: migration 003] email user saat event terjadi (untuk historical context)"
         varchar action
         varchar resource_type
         uuid resource_id
@@ -595,9 +637,11 @@ graph LR
 
 | Komponen | Pilihan | Justifikasi |
 |---|---|---|
-| **Frontend** | Next.js 14 | App Router + RSC untuk performa optimal; SSR untuk SEO; ekosistem React matang |
+| **Frontend** | ~~Next.js 14~~ **Next.js 16.2.3** `[IMPLEMENTASI]` | Versi aktual. App Router + RSC. React 19.2.4 (bukan 18) |
+| **CSS** | ~~Tailwind CSS v3~~ **Tailwind CSS v4** `[IMPLEMENTASI]` | CSS-first config via `@theme {}` di globals.css — tidak ada tailwind.config.js |
+| **Auth (Frontend)** | **NextAuth v5 beta.25** `[IMPLEMENTASI]` | Credentials provider, JWT strategy, 3 hardcoded users (prototype). Akan diganti JWT backend saat integrasi. |
 | **UI Components** | shadcn/ui + Radix | Accessible, customizable, tidak lock-in ke library tertentu |
-| **Data Fetching** | TanStack Query v5 | Server state management terbaik untuk React; caching + background refetch |
+| **Data Fetching** | TanStack Query v5 | Server state management terbaik untuk React — *belum terhubung ke backend (prototype state)* |
 | **Backend** | FastAPI | Async Python native; auto-generated OpenAPI docs; Pydantic v2 validation; performance tinggi |
 | **ORM** | SQLAlchemy 2.0 async | Mature, production-ready, native async support, compatible dengan PostgreSQL |
 | **Database** | PostgreSQL 16 | RLS untuk multi-tenancy; JSONB untuk flexible data; production-grade ACID |
@@ -727,8 +771,8 @@ Plugin PHP mengirim payload JSON via POST ke `/plugin/v1/callback` dengan HMAC-S
 | FR-INT-04 | RBAC Auditor | Query tabel `users`, `roles`, `user_user_groups`. Deteksi: privilege berlebih, akun tidak aktif >1 tahun dengan role admin, multiple super-admin. | List user bermasalah (tanpa PII sensitif) | P1 |
 | FR-INT-05 | File Integrity Checker | Bandingkan SHA-256 hash file OJS vs checksums resmi dari OJS GitHub release. Deteksi: modified, unknown, missing files. | List file + status (ok/modified/unknown/missing) | P1 |
 | FR-INT-06 | Content Injection Detector | Query DB OJS tabel `articles`, `submissions`. Deteksi pola: URL judi online, keyword gambling (regex), iframe tersembunyi, script redirect berbahaya. | List artikel terindikasi + excerpt bukti | P1 |
-| FR-INT-07 | Database Security Check | Cek: DB user dengan hak berlebih (root), backup file .sql di web-accessible directory, SQL mode konfigurasi. | List konfigurasi DB bermasalah | P2 |
-| FR-INT-08 | Weak Credentials Detector | Cek hash password admin vs daftar common passwords top-10000. PHP `password_verify()` untuk bcrypt, atau check langsung untuk SHA1. | Daftar akun dengan password lemah | P2 |
+| FR-INT-07 | Database Security Check | Cek: DB user dengan hak berlebih (root), backup file .sql di web-accessible directory, SQL mode konfigurasi. | List konfigurasi DB bermasalah | P2 **⏸ DEFERRED Fase 2 — tidak ada di plugin v1.0.1** |
+| FR-INT-08 | Weak Credentials Detector | Cek hash password admin vs daftar common passwords top-10000. PHP `password_verify()` untuk bcrypt, atau check langsung untuk SHA1. | Daftar akun dengan password lemah | P2 **⏸ DEFERRED Fase 2 — tidak ada di plugin v1.0.1** |
 
 ### 6.4 FR-EXT — External Security Scan (Bot Ofensif)
 
@@ -743,7 +787,7 @@ Berjalan dari server OJSDef. Passive/read-only. Rate limit: 10 req/detik ke targ
 | FR-EXT-05 | Passive Vuln Probing | Reflected XSS detection pada query params, SQL error disclosure, path traversal indicators, open redirect check, CSRF absence. | `requests`, `re` | P1 |
 | FR-EXT-06 | Open Directory Detection | Akses: `/backup/`, `/.git/`, `/.env`, `/phpinfo.php`, `/config/`, `wp-config.php`, `/install/`. Tanpa bruteforce. | `requests` | P1 |
 | FR-EXT-07 | CVE Matching | Match versi OJS + plugin yang terdeteksi dengan NVD CVE API. Return CVE ID, CVSS score, dan deskripsi. | `nvdlib`, `requests` | P1 |
-| FR-EXT-08 | API Security Testing | Test endpoint API publik OJS: unauthenticated access, data leakage di response, IDOR indicators pada endpoint dengan ID. | `requests`, `httpx` | P2 |
+| FR-EXT-08 | API Security Testing | Test endpoint API publik OJS: unauthenticated access, data leakage di response, IDOR indicators pada endpoint dengan ID. | `requests`, `httpx` | P2 **⏸ DEFERRED Fase 2 — tidak diimplementasikan di external bot MVP** |
 
 ### 6.5 FR-SCORE — Risk Scoring Engine
 
@@ -1970,6 +2014,7 @@ Fitur-fitur berikut **tidak** termasuk dalam lingkup pengembangan OJSDef v1.0:
 | 1.0 | April 2026 | Kelompok 3 — Topik G2 | Versi awal SRS mencakup arsitektur sistem, ERD, tech stack, kebutuhan fungsional & non-fungsional, spesifikasi API, sequence diagram, arsitektur deployment Docker, dan persyaratan keamanan. |
 | 1.1 | Mei 2026 | Kelompok 3 — Topik G2 | Revisi scope MVP berdasarkan diskusi konsistensi PRD-SRS: (1) FR-AUTH-01 diubah dari self-register+email-verifikasi ke SaaS Admin create account; (2) Endpoint forgot-password, reset-password, verify-email dihapus dari MVP API spec dan dikomentari sebagai Fase 2; (3) Sequence diagram 9.1 diperbarui sesuai flow SaaS Admin create account; (4) FR-TARGET-06 subscription tiers di-defer ke Fase 3; (5) FR-REPORT-06 Scan Scheduling di-defer ke Fase 2 + celery-beat dikomentari dari docker-compose; (6) FR-REPORT-03 dibatasi JSON only; (7) Flowchart 3.4 diperbaiki: "Report Worker" diubah menjadi "Scoring Worker - PDF Generation"; (8) Ditambahkan section 6.8 FR-LOG untuk audit log minimal (FR-LOG-01, FR-LOG-02) sebagai fitur P1 MVP untuk kebutuhan debugging. |
 | 1.2 | Mei 2026 | Kelompok 3 — Topik G2 | Penyelarasan minor issues & re-analisa menyeluruh: (1) Section 2.2 F-06 diperbarui — HTML export dihapus; (2) Section 2.3 it_admin diperbarui — "jadwal scan" diganti dengan akses audit log (FR-LOG); (3) Section 2.4 Batasan Sistem ditambah catatan MVP scope role + Pimpinan Institusi; (4) Section 3.1 Mermaid arsitektur — BEAT dikomentari; (5) Section 9.5 Scan Scheduling Flow ditandai [DEFERRED Fase 2]; (6) NFR direorder: Keamanan (7.1) → Performa (7.2) → Ketersediaan (7.3) → Usability (7.4) → Kompatibilitas (7.5); (7) NFR-AVAIL-03 diperbarui 20+ MVP / 100+ Fase 2; (8) NFR-USE-05 mobile best effort ditambahkan; (9) dnspython==2.6.1 dan validators==0.28.3 ditambahkan ke requirements.txt. |
+| 1.3 | Juni 2026 | Kelompok 3 — Topik G2 | Sinkronisasi implementasi aktual (post-core feature completion): (1) Tambah section Catatan Implementasi dengan tabel status per komponen; (2) ERD Section 4.1 diperbarui: `ojs_targets` + 5 kolom baru (trigger_endpoint, probe_endpoint, connection_mode, pending_scan_job_id, force_heartbeat), `scan_jobs` + 2 kolom (diagnostic_code, diagnostic_detail), `audit_logs` + user_email + tenant_id nullable; (3) Role enum Section 2.3 diperbarui: `it_admin` dihapus, `viewer` ditambahkan; (4) Tech stack Section 5.2 diperbarui ke versi aktual (Next.js 16, React 19, Tailwind v4, NextAuth v5); (5) FR-INT-07, FR-INT-08, FR-EXT-08 ditandai DEFERRED Fase 2; (6) Internal bot scanner table ditambah kolom status; (7) External bot scanner table: cookie_analyzer ditambahkan, FR-EXT-08 ditandai DEFERRED; (8) Hybrid A+C plugin connection protocol didokumentasikan di Section 3.3.3. |
 
 ---
 

@@ -1,51 +1,75 @@
 'use client'
 
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
 import { useScans, useScanJob } from '@/hooks/use-scans'
-import { SEVERITY_LABELS, SEVERITY_COLORS, SEVERITY_BG_COLORS } from '@/lib/utils'
-import { ShieldAlert, ShieldCheck, Shield, ShieldOff } from 'lucide-react'
+import { SEVERITY_LABELS, SEVERITY_COLORS, SEVERITY_BG_COLORS, SCAN_TYPE_LABELS } from '@/lib/utils'
+import { ShieldAlert, ShieldCheck, Shield, ShieldOff, Info } from 'lucide-react'
+import type { ScanType } from '@/types/api'
 
-function ScoreDisplay({ score, label }: { score: number | null; label: string }) {
-  const color =
-    score == null ? 'text-slate-400'
-    : score <= 25 ? 'text-red-400'
-    : score <= 50 ? 'text-orange-400'
-    : score <= 75 ? 'text-yellow-400'
-    : 'text-green-400'
+type ScanTypeFilter = ScanType | 'all'
 
-  return (
-    <div className="glass-dark rounded-xl border border-white/5 p-8 text-center">
-      <p className={`text-7xl font-black ${color}`}>
-        {score != null ? score.toFixed(1) : '—'}
-      </p>
-      <p className="text-slate-400 mt-3 text-sm">{label}</p>
-    </div>
-  )
+const FILTER_OPTIONS: { value: ScanTypeFilter; label: string }[] = [
+  { value: 'all',      label: 'Terbaru' },
+  { value: 'full',     label: 'Audit Penuh' },
+  { value: 'internal', label: 'Internal' },
+  { value: 'external', label: 'Eksternal' },
+]
+
+const SEVERITY_ROWS = [
+  { key: 'critical', label: 'Kritis',    color: 'text-red-400',    bg: 'bg-red-400/10 border-red-400/20',       Icon: ShieldOff   },
+  { key: 'high',     label: 'Berbahaya', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20', Icon: ShieldAlert },
+  { key: 'medium',   label: 'Perhatian', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20', Icon: Shield      },
+  { key: 'low',      label: 'Aman',      color: 'text-green-400',  bg: 'bg-green-400/10 border-green-400/20',   Icon: ShieldCheck },
+] as const
+
+function scoreColor(score: number | null) {
+  if (score == null) return 'text-slate-400'
+  if (score <= 25)   return 'text-red-400'
+  if (score <= 50)   return 'text-orange-400'
+  if (score <= 75)   return 'text-yellow-400'
+  return 'text-green-400'
 }
 
+/* ------------------------------------------------------------------ */
+/* Single-job view                                                      */
+/* ------------------------------------------------------------------ */
 function RiskMatrix({ jobId }: { jobId: string }) {
   const { data: job, isLoading } = useScanJob(jobId)
 
   if (isLoading) return <div className="h-64 bg-slate-800 rounded-xl animate-pulse" />
   if (!job) return <p className="text-slate-500">Data scan tidak ditemukan.</p>
 
-  const counts = [
-    { label: 'Kritis', count: job.critical_count, color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20', Icon: ShieldOff },
-    { label: 'Berbahaya', count: job.high_count, color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20', Icon: ShieldAlert },
-    { label: 'Perhatian', count: job.medium_count, color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20', Icon: Shield },
-    { label: 'Aman', count: job.low_count, color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/20', Icon: ShieldCheck },
-  ]
-
   return (
     <div className="space-y-6">
-      <ScoreDisplay score={job.overall_score} label="Skor Risiko Keseluruhan (0–100)" />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <span>Berdasarkan:</span>
+          <span className="text-slate-300 font-medium">{SCAN_TYPE_LABELS[job.scan_type]}</span>
+          <span>·</span>
+          <span>{new Date(job.created_at).toLocaleString('id-ID')}</span>
+        </div>
+        <div
+          className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-800/60 border border-white/5 rounded-lg px-3 py-1.5"
+          title="Skor ini hanya mencerminkan satu sesi scan. Skor rata-rata semua target tersedia di halaman Beranda."
+        >
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          <span>Skor satu sesi scan · bukan rata-rata semua target</span>
+        </div>
+      </div>
+
+      <div className="glass-dark rounded-xl border border-white/5 p-8 text-center">
+        <p className={`text-7xl font-black ${scoreColor(job.overall_score)}`}>
+          {job.overall_score != null ? job.overall_score.toFixed(1) : '—'}
+        </p>
+        <p className="text-slate-400 mt-3 text-sm">Skor Risiko Keseluruhan (0–100)</p>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {counts.map(({ label, count, color, bg, Icon }) => (
-          <div key={label} className={`glass-dark rounded-xl border p-5 text-center ${bg}`}>
+        {SEVERITY_ROWS.map(({ key, label, color, bg, Icon }) => (
+          <div key={key} className={`glass-dark rounded-xl border p-5 text-center ${bg}`}>
             <Icon className={`h-6 w-6 mx-auto mb-2 ${color}`} />
-            <p className={`text-3xl font-bold ${color}`}>{count}</p>
+            <p className={`text-3xl font-bold ${color}`}>{job[`${key}_count`]}</p>
             <p className="text-slate-400 text-sm mt-1">{label}</p>
           </div>
         ))}
@@ -63,24 +87,65 @@ function RiskMatrix({ jobId }: { jobId: string }) {
   )
 }
 
-function AutoSelectJob() {
-  const { data: scans } = useScans({ limit: 20 })
-  const latest = scans?.find((s) => s.status === 'completed')
+/* ------------------------------------------------------------------ */
+/* Filter + auto-select logic                                           */
+/* ------------------------------------------------------------------ */
+function AutoSelectJob({
+  typeFilter,
+  onFilterChange,
+}: {
+  typeFilter: ScanTypeFilter
+  onFilterChange: (f: ScanTypeFilter) => void
+}) {
+  const { data: scans } = useScans({ limit: 50 })
+  const completed = scans?.filter((s) => s.status === 'completed') ?? []
 
-  if (!latest) {
-    return (
-      <div className="glass-dark rounded-xl border border-white/5 p-8 text-center text-slate-500">
-        <p>Belum ada scan selesai. Jalankan scan terlebih dahulu.</p>
+  // 'all' (Terbaru): pick the single most recent completed scan regardless of type
+  const latest =
+    typeFilter === 'all'
+      ? completed[0]
+      : completed.find((s) => s.scan_type === typeFilter)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        {FILTER_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => onFilterChange(value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              typeFilter === value
+                ? 'bg-primary/20 text-primary border border-primary/30'
+                : 'bg-slate-800/60 text-slate-400 hover:text-white border border-transparent'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-    )
-  }
 
-  return <RiskMatrix jobId={latest.id} />
+      {!latest ? (
+        <div className="glass-dark rounded-xl border border-white/5 p-8 text-center text-slate-500">
+          <p>
+            Belum ada scan
+            {typeFilter !== 'all' ? ` ${SCAN_TYPE_LABELS[typeFilter]}` : ''} selesai.
+            Jalankan scan terlebih dahulu.
+          </p>
+        </div>
+      ) : (
+        <RiskMatrix jobId={latest.id} />
+      )}
+    </div>
+  )
 }
 
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
 function RiskScoringContent() {
   const searchParams = useSearchParams()
   const jobId = searchParams.get('jobId')
+  const [typeFilter, setTypeFilter] = useState<ScanTypeFilter>('all')
 
   return (
     <div className="space-y-6">
@@ -89,7 +154,10 @@ function RiskScoringContent() {
         <p className="text-slate-400 mt-1 text-sm">Skor risiko keseluruhan berdasarkan hasil pemindaian</p>
       </div>
 
-      {jobId ? <RiskMatrix jobId={jobId} /> : <AutoSelectJob />}
+      {jobId
+        ? <RiskMatrix jobId={jobId} />
+        : <AutoSelectJob typeFilter={typeFilter} onFilterChange={setTypeFilter} />
+      }
     </div>
   )
 }
