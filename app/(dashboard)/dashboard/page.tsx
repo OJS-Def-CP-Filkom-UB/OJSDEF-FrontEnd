@@ -6,7 +6,7 @@ import { useAdminStats } from '@/hooks/use-admin'
 import { useScans } from '@/hooks/use-scans'
 import { useAuth } from '@/hooks/use-auth'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS, SEVERITY_LABELS, SEVERITY_COLORS } from '@/lib/utils'
-import { ShieldCheck, Target, ScanLine, AlertTriangle, Info, Building2, Wifi } from 'lucide-react'
+import { ShieldCheck, Target, ScanLine, AlertTriangle, Info, Building2, Wifi, Users } from 'lucide-react'
 
 function StatCard({ icon, iconBg, label, value, sub }: {
   icon: React.ReactNode
@@ -39,9 +39,9 @@ function SaasAdminDashboard() {
         <p className="text-slate-400 mt-1 text-sm">Ringkasan postur keamanan seluruh tenant OJSDef</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {adminLoading ? (
-          [...Array(5)].map((_, i) => (
+          [...Array(6)].map((_, i) => (
             <div key={i} className="h-32 bg-slate-800 rounded-xl animate-pulse" />
           ))
         ) : (
@@ -77,6 +77,12 @@ function SaasAdminDashboard() {
               label="Scan dengan Kritis"
               value={adminStats?.scans_with_critical_findings ?? 0}
               sub="Memiliki temuan kritis"
+            />
+            <StatCard
+              icon={<Users className="h-5 w-5 text-orange-400" />}
+              iconBg="bg-orange-400/10"
+              label="Total Pengguna"
+              value={adminStats?.total_users ?? 0}
             />
           </>
         )}

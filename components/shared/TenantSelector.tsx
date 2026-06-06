@@ -21,11 +21,12 @@ export function TenantSelector() {
       <select
         value={selectedTenantId ?? 'all'}
         onChange={(e) => setSelectedTenantId(e.target.value === 'all' ? null : e.target.value)}
-        className="w-full h-8 bg-slate-900/60 border border-white/10 text-slate-300 text-xs rounded-md px-2"
+        className="w-full h-8 bg-slate-900 border border-white/10 text-slate-300 text-xs rounded-md px-2"
+        style={{ colorScheme: 'dark' }}
       >
-        <option value="all">Semua Tenant</option>
+        <option value="all" className="bg-slate-900 text-slate-300">Semua Tenant</option>
         {tenants?.map((t) => (
-          <option key={t.id} value={t.id}>{t.name}</option>
+          <option key={t.id} value={t.id} className="bg-slate-900 text-slate-300">{t.name}</option>
         ))}
       </select>
     </div>

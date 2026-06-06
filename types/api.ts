@@ -125,6 +125,7 @@ export interface AdminPlatformStats {
   active_targets: number
   scans_last_30_days: number
   scans_with_critical_findings: number
+  total_users: number
 }
 
 // Reports
