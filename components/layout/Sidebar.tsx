@@ -9,6 +9,7 @@ import {
   Download, FileText, Users, LogOut, ChevronRight, KeyRound, ClipboardList,
 } from 'lucide-react'
 import type { UserRole } from '@/types/api'
+import { TenantSelector } from '@/components/shared/TenantSelector'
 
 type NavItem = { label: string; href: string; icon: React.ElementType }
 
@@ -28,7 +29,8 @@ const AUDIT_NAV: NavItem = { label: 'Audit Log', href: '/audit-logs', icon: Clip
 function getNavItems(role: UserRole): NavItem[] {
   if (role === 'viewer') return BASE_NAV
   if (role === 'admin_ojs') return [...BASE_NAV, SCAN_NAV, LOG_NAV]
-  return [...BASE_NAV, SCAN_NAV, LOG_NAV, USERS_NAV, AUDIT_NAV]
+  // saas_admin: tidak dapat memulai scan
+  return [...BASE_NAV, LOG_NAV, USERS_NAV, AUDIT_NAV]
 }
 
 export function Sidebar() {
@@ -98,6 +100,7 @@ export function Sidebar() {
           <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
           <p className="text-slate-500 text-xs truncate">{user.email}</p>
         </div>
+        <TenantSelector />
         <Link
           href="/change-password"
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
