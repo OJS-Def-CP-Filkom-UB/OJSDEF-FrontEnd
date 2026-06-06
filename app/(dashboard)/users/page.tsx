@@ -123,7 +123,7 @@ function CredentialBox({
               variant="ghost"
               size="sm"
               onClick={() => {
-                navigator.clipboard.writeText(result.telegram_bot_deeplink)
+                navigator.clipboard.writeText(result.telegram_bot_deeplink).catch(() => {})
               }}
               className="shrink-0 text-slate-400 hover:text-white hover:bg-white/5"
             >

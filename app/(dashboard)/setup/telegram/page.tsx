@@ -18,13 +18,6 @@ export default function SetupTelegramPage() {
   const { data: linkData } = useGetTelegramLink()
   const [linked, setLinked] = useState(false)
 
-  // Detect if already linked before page opens
-  useEffect(() => {
-    if (user?.telegram_chat_id) {
-      setLinked(true)
-    }
-  }, [user])
-
   // Redirect after linked
   useEffect(() => {
     if (!linked) return
@@ -108,21 +101,24 @@ export default function SetupTelegramPage() {
         )}
 
         {/* CTA */}
-        <Button
-          asChild
-          className="w-full bg-primary hover:bg-primary/90"
-          disabled={!linkData?.deeplink}
-        >
-          <a
-            href={linkData?.deeplink ?? '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Buka Bot Telegram OJSDef
-          </a>
-        </Button>
+        {linkData?.deeplink ? (
+          <Button asChild className="w-full bg-primary hover:bg-primary/90">
+            <a
+              href={linkData.deeplink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Buka Bot Telegram OJSDef
+            </a>
+          </Button>
+        ) : (
+          <Button disabled className="w-full bg-primary hover:bg-primary/90 flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Memuat link...
+          </Button>
+        )}
 
         {/* Polling status */}
         <div className="flex flex-col items-center gap-2 pt-1">
