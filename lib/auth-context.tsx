@@ -3,12 +3,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import axios from 'axios'
 import type { UserProfile } from '@/types/api'
-import { setAccessToken } from '@/lib/api'
+import { api, setAccessToken } from '@/lib/api'
 
 interface AuthContextValue {
   user: UserProfile | null
-  login: (email: string, password: string) => Promise<{ must_change_password: boolean }>
+  login: (email: string, password: string) => Promise<{ must_change_password: boolean; must_link_telegram: boolean }>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
   isLoading: boolean
 }
 
@@ -38,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }>('/api/auth/login', { email, password })
     setAccessToken(data.access_token)
     setUser(data.user)
-    return { must_change_password: data.must_change_password }
+    const must_link_telegram =
+      data.user?.role === 'admin_ojs' && !data.user?.telegram_chat_id
+    return { must_change_password: data.must_change_password, must_link_telegram }
   }, [])
 
   const logout = useCallback(async () => {
@@ -47,8 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const { data } = await api.get<UserProfile>('/api/v1/auth/me')
+      setUser(data)
+    } catch {}
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,20 +1,28 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { useAuth } from "@/hooks/use-auth";
 
+const TELEGRAM_EXEMPT_PATHS = ['/setup/telegram', '/change-password']
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace('/login')
     }
-  }, [isLoading, user, router])
+    if (!isLoading && user?.role === 'admin_ojs' && !user.telegram_chat_id) {
+      if (!TELEGRAM_EXEMPT_PATHS.includes(pathname)) {
+        router.replace('/setup/telegram')
+      }
+    }
+  }, [isLoading, user, router, pathname])
 
   if (isLoading) {
     return (

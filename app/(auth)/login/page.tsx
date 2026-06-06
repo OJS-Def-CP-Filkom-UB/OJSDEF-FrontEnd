@@ -35,6 +35,8 @@ export default function LoginPage() {
       const result = await login(data.email, data.password)
       if (result.must_change_password) {
         router.push('/change-password')
+      } else if (result.must_link_telegram) {
+        router.push('/setup/telegram')
       } else {
         router.push('/dashboard')
       }
