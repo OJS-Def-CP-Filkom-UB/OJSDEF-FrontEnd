@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useScans } from '@/hooks/use-scans'
 import { useTargets } from '@/hooks/use-targets'
+import { useAuth } from '@/hooks/use-auth'
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { SCAN_STATUS_LABELS, SCAN_STATUS_COLORS, SCAN_TYPE_LABELS } from '@/lib/utils'
 import {
@@ -35,6 +36,9 @@ function ScanManagementContent() {
   const router = useRouter()
   const { data: scans, isLoading } = useScans()
   const { data: targets } = useTargets()
+  const { user } = useAuth()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isSaasAdmin = user?.role === 'saas_admin'
 
   const [filterTarget, setFilterTarget] = useState<string>('all')
   const [filterType, setFilterType] = useState<ScanType | 'all'>('all')

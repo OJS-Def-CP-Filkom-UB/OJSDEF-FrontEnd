@@ -1,6 +1,7 @@
 'use client'
 
 import { useTargets, useDeleteTarget } from '@/hooks/use-targets'
+import { useAuth } from '@/hooks/use-auth'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Plus, CheckCircle, XCircle, Wifi, WifiOff, ExternalLink, Trash2 } from 'lucide-react'
@@ -8,6 +9,8 @@ import { Plus, CheckCircle, XCircle, Wifi, WifiOff, ExternalLink, Trash2 } from 
 export default function TargetsPage() {
   const { data: targets, isLoading } = useTargets()
   const deleteTarget = useDeleteTarget()
+  const { user } = useAuth()
+  const isSaasAdmin = user?.role === 'saas_admin'
 
   return (
     <div className="space-y-6">
@@ -16,12 +19,14 @@ export default function TargetsPage() {
           <h1 className="text-2xl font-bold text-white">Target OJS</h1>
           <p className="text-slate-400 mt-1 text-sm">Daftar instalasi OJS yang dipantau</p>
         </div>
-        <Link href="/targets/new">
-          <Button className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Target
-          </Button>
-        </Link>
+        {!isSaasAdmin && (
+          <Link href="/targets/new">
+            <Button className="bg-primary hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Target
+            </Button>
+          </Link>
+        )}
       </div>
 
       {isLoading ? (
@@ -33,12 +38,14 @@ export default function TargetsPage() {
       ) : !targets?.length ? (
         <div className="glass-dark rounded-xl border border-white/5 p-12 text-center">
           <p className="text-slate-500 mb-4">Belum ada target OJS terdaftar.</p>
-          <Link href="/targets/new">
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Target Pertama
-            </Button>
-          </Link>
+          {!isSaasAdmin && (
+            <Link href="/targets/new">
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Target Pertama
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -58,18 +65,20 @@ export default function TargetsPage() {
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-slate-600 hover:text-red-400 flex-shrink-0"
-                  onClick={() => {
-                    if (confirm(`Hapus target "${target.name}"?`)) {
-                      deleteTarget.mutate(target.id)
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {!isSaasAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-600 hover:text-red-400 flex-shrink-0"
+                    onClick={() => {
+                      if (confirm(`Hapus target "${target.name}"?`)) {
+                        deleteTarget.mutate(target.id)
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
               {/* Status badges */}
@@ -105,14 +114,14 @@ export default function TargetsPage() {
                     Detail
                   </Button>
                 </Link>
-                {!target.is_verified && (
+                {!isSaasAdmin && !target.is_verified && (
                   <Link href={`/targets/${target.id}/verify`} className="flex-1">
                     <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-xs">
                       Verifikasi
                     </Button>
                   </Link>
                 )}
-                {target.is_verified && !target.plugin_connected && (
+                {!isSaasAdmin && target.is_verified && !target.plugin_connected && (
                   <Link href={`/targets/${target.id}/plugin-guide`} className="flex-1">
                     <Button size="sm" className="w-full bg-cyan-500 hover:bg-cyan-600 text-xs">
                       Pasang Plugin

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStartScan } from '@/hooks/use-scans'
 import { useTargets } from '@/hooks/use-targets'
+import { useAuth } from '@/hooks/use-auth'
 import { RoleGuard } from '@/components/shared/RoleGuard'
 import { Button } from '@/components/ui/button'
 import {
@@ -70,6 +71,24 @@ function StartScanForm() {
 }
 
 export default function ScanningPage() {
+  const { user } = useAuth()
+
+  if (user?.role === 'saas_admin') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Mulai Scan</h1>
+        </div>
+        <div className="glass-dark rounded-xl border border-amber-400/20 p-8 text-center">
+          <p className="text-amber-400 font-medium mb-2">Akses Terbatas</p>
+          <p className="text-slate-400 text-sm">
+            SaaS Administrator tidak dapat memulai scan. Hanya Admin OJS dari masing-masing tenant yang dapat melakukan scan.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
