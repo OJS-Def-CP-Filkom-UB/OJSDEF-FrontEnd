@@ -1,14 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { ScanJob, ScanType } from '@/types/api'
+import { useTenantContext } from '@/lib/tenant-context'
 
 export function useScans(params?: { limit?: number }) {
+  const { selectedTenantId } = useTenantContext()
   const limit = params?.limit
   return useQuery({
-    queryKey: ['scans', { limit }],
+    queryKey: ['scans', { limit, tenantId: selectedTenantId }],
     queryFn: () => {
-      const url = limit ? `/api/v1/scans?limit=${limit}` : '/api/v1/scans'
-      return api.get<ScanJob[]>(url).then((r) => r.data)
+      const queryParams: Record<string, string | number> = {}
+      if (limit) queryParams.limit = limit
+      if (selectedTenantId) queryParams.tenant_id = selectedTenantId
+      return api.get<ScanJob[]>('/api/v1/scans', { params: queryParams }).then((r) => r.data)
     },
   })
 }

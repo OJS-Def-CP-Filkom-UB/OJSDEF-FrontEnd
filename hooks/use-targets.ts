@@ -1,11 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { OJSTarget, CreateTargetRequest, VerifyTargetResponse, PluginGuideResponse } from '@/types/api'
+import { useTenantContext } from '@/lib/tenant-context'
 
 export function useTargets() {
+  const { selectedTenantId } = useTenantContext()
   return useQuery({
-    queryKey: ['targets'],
-    queryFn: () => api.get<OJSTarget[]>('/api/v1/targets').then((r) => r.data),
+    queryKey: ['targets', selectedTenantId],
+    queryFn: () =>
+      api.get<OJSTarget[]>('/api/v1/targets', {
+        params: selectedTenantId ? { tenant_id: selectedTenantId } : {},
+      }).then((r) => r.data),
   })
 }
 
