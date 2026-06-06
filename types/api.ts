@@ -15,6 +15,7 @@ export interface TokenResponse {
   access_token: string
   refresh_token: string
   token_type: 'bearer'
+  user: UserProfile
   must_change_password: boolean
 }
 

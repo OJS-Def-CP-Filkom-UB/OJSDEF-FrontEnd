@@ -16,8 +16,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace('/login')
-    }
-    if (!isLoading && user?.role === 'admin_ojs' && !user.telegram_chat_id) {
+    } else if (!isLoading && user?.role === 'admin_ojs' && !user.telegram_chat_id) {
       if (!TELEGRAM_EXEMPT_PATHS.includes(pathname)) {
         router.replace('/setup/telegram')
       }

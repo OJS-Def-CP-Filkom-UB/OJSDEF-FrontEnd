@@ -54,7 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await api.get<UserProfile>('/api/v1/auth/me')
       setUser(data)
-    } catch {}
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') console.warn('[refreshUser]', err)
+    }
   }, [])
 
   return (
