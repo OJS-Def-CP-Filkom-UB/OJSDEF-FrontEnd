@@ -118,6 +118,15 @@ export interface DashboardStats {
   findings_summary: { critical: number; high: number }
 }
 
+// Admin Platform Stats
+export interface AdminPlatformStats {
+  total_tenants: number
+  total_targets: number
+  active_targets: number
+  scans_last_30_days: number
+  scans_with_critical_findings: number
+}
+
 // Reports
 export interface Report {
   id: string
