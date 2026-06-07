@@ -93,6 +93,7 @@ export interface ScanJob {
   diagnostic_detail: string | null
   progress: ScanProgress | null
   created_at: string
+  module_errors: Record<string, string>
 }
 export interface ScanFinding {
   id: string
@@ -108,6 +109,8 @@ export interface ScanFinding {
   cve_id: string | null
   owasp_category: string | null
   is_false_positive: boolean
+  references: string[]
+  remediation_steps: string[]
 }
 
 // Dashboard
