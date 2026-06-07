@@ -258,9 +258,15 @@ export default function TargetDetailPage() {
             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
               Versi OJS
             </p>
-            <p className="text-xs font-black text-white font-mono">
-              {target.ojs_version ?? '—'}
-            </p>
+            {target.ojs_version ? (
+              <span className="inline-block text-xs font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded">
+                {target.ojs_version}
+              </span>
+            ) : (
+              <p className="text-muted-foreground/60 text-[10px] leading-snug">
+                Belum terdeteksi — jalankan scan untuk mendeteksi versi OJS
+              </p>
+            )}
           </CardContent>
         </Card>
 
