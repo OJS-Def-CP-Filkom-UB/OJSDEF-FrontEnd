@@ -311,11 +311,11 @@ export default function TargetDetailPage() {
           onClick={() =>
             startScan.mutate(
               { targetId: id, scanType: 'full' },
-              { onSuccess: (scan) => router.push(`/scanning?jobId=${scan.id}`) }
+              { onSuccess: (scan) => router.push(`/scan-management/${scan.id}`) }
             )
           }
         >
-          <Plus size={14} /> Mulai Scan
+          <Plus size={14} /> Mulai Scan Penuh
         </Button>
         <a href={`${target.url}`} target="_blank" rel="noreferrer">
           <Button
