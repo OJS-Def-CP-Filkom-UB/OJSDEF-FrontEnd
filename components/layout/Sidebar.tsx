@@ -114,7 +114,7 @@ export function Sidebar() {
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
         >
           <LogOut className="h-4 w-4 text-slate-500" />
           Keluar
