@@ -21,12 +21,20 @@ const createUserSchema = z.object({
   role: z.enum(['saas_admin', 'admin_ojs', 'viewer']),
   tenant_id: z.string().optional(),
   new_tenant_name: z.string().optional(),
+  telegram_username: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.role === 'admin_ojs' && !data.tenant_id && !data.new_tenant_name) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Pilih institusi atau buat institusi baru untuk admin_ojs',
       path: ['tenant_id'],
+    })
+  }
+  if (data.role === 'admin_ojs' && !data.telegram_username?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Username Telegram wajib diisi untuk Admin OJS',
+      path: ['telegram_username'],
     })
   }
 })
@@ -96,6 +104,39 @@ function CredentialBox({
         </div>
       </div>
 
+      {/* Telegram deep link */}
+      {result.telegram_bot_deeplink && (
+        <div className="bg-slate-900/70 border border-white/10 rounded-lg p-4 space-y-3">
+          <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">
+            Link Bot Telegram
+          </p>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            Kirimkan link berikut kepada{' '}
+            <strong className="text-slate-300">{result.email}</strong>{' '}
+            untuk menghubungkan akun Telegram mereka.
+          </p>
+          <div className="flex items-center gap-3">
+            <code className="text-xs font-mono text-cyan-300 flex-1 break-all select-all">
+              {result.telegram_bot_deeplink}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(result.telegram_bot_deeplink).catch(() => {})
+              }}
+              className="shrink-0 text-slate-400 hover:text-white hover:bg-white/5"
+            >
+              <Copy className="h-4 w-4" />
+              <span className="ml-1.5 text-xs">Salin</span>
+            </Button>
+          </div>
+          <p className="text-slate-500 text-xs">
+            Link valid 7 hari. Pengguna cukup klik link lalu tekan START di Telegram.
+          </p>
+        </div>
+      )}
+
       {/* Peringatan */}
       <div className="flex gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3">
         <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
@@ -117,7 +158,7 @@ function CreateUserForm({ onCreated }: { onCreated: (result: CreateUserResponse)
 
   const form = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { email: '', full_name: '', role: 'admin_ojs' },
+    defaultValues: { email: '', full_name: '', role: 'admin_ojs', telegram_username: '' },
   })
 
   async function onSubmit(data: CreateUserForm) {
@@ -184,6 +225,32 @@ function CreateUserForm({ onCreated }: { onCreated: (result: CreateUserResponse)
               </FormItem>
             )}
           />
+          {form.watch('role') === 'admin_ojs' && (
+            <FormField
+              control={form.control}
+              name="telegram_username"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-3">
+                  <FormLabel className="text-slate-300">
+                    Username Telegram
+                    <span className="text-red-400 ml-1">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="@nama_pengguna"
+                      className="bg-slate-900/60 border-white/10 text-white placeholder:text-slate-500"
+                    />
+                  </FormControl>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Pengguna akan mendapat panduan menghubungkan bot Telegram melalui link yang dikirim admin
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           {form.watch('role') === 'admin_ojs' && (
             <FormItem className="sm:col-span-3">
               <FormLabel className="text-slate-300">Institusi</FormLabel>

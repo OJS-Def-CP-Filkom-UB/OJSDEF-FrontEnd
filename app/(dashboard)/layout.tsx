@@ -2,6 +2,7 @@
 
 import React from "react";
 import AppShell from "@/components/layout/AppShell";
+import { TenantProvider } from "@/lib/tenant-context";
 
 export default function DashboardLayout({
   children,
@@ -9,8 +10,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell>
-      {children}
-    </AppShell>
+    <TenantProvider>
+      <AppShell>
+        {children}
+      </AppShell>
+    </TenantProvider>
   );
 }

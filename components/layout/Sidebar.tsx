@@ -9,6 +9,7 @@ import {
   Download, FileText, Users, LogOut, ChevronRight, KeyRound, ClipboardList,
 } from 'lucide-react'
 import type { UserRole } from '@/types/api'
+import { TenantSelector } from '@/components/shared/TenantSelector'
 
 type NavItem = { label: string; href: string; icon: React.ElementType }
 
@@ -21,14 +22,15 @@ const BASE_NAV: NavItem[] = [
 ]
 
 const SCAN_NAV: NavItem = { label: 'Mulai Scan', href: '/scanning', icon: ScanLine }
-const LOG_NAV: NavItem = { label: 'Log Teknis', href: '/scan-management', icon: FileText }
+const LOG_NAV: NavItem = { label: 'Log Scan', href: '/scan-management', icon: FileText }
 const USERS_NAV: NavItem = { label: 'Kelola Pengguna', href: '/users', icon: Users }
 const AUDIT_NAV: NavItem = { label: 'Audit Log', href: '/audit-logs', icon: ClipboardList }
 
 function getNavItems(role: UserRole): NavItem[] {
   if (role === 'viewer') return BASE_NAV
   if (role === 'admin_ojs') return [...BASE_NAV, SCAN_NAV, LOG_NAV]
-  return [...BASE_NAV, SCAN_NAV, LOG_NAV, USERS_NAV, AUDIT_NAV]
+  // saas_admin: tidak dapat memulai scan
+  return [...BASE_NAV, LOG_NAV, USERS_NAV, AUDIT_NAV]
 }
 
 export function Sidebar() {
@@ -98,6 +100,7 @@ export function Sidebar() {
           <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
           <p className="text-slate-500 text-xs truncate">{user.email}</p>
         </div>
+        <TenantSelector />
         <Link
           href="/change-password"
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
@@ -111,7 +114,7 @@ export function Sidebar() {
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
         >
           <LogOut className="h-4 w-4 text-slate-500" />
           Keluar

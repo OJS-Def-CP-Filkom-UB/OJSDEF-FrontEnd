@@ -1,11 +1,16 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Report } from '@/types/api'
+import { useTenantContext } from '@/lib/tenant-context'
 
 export function useReports() {
+  const { selectedTenantId } = useTenantContext()
   return useQuery({
-    queryKey: ['reports'],
-    queryFn: () => api.get<Report[]>('/api/v1/reports').then((r) => r.data),
+    queryKey: ['reports', selectedTenantId],
+    queryFn: () =>
+      api.get<Report[]>('/api/v1/reports', {
+        params: selectedTenantId ? { tenant_id: selectedTenantId } : {},
+      }).then((r) => r.data),
   })
 }
 

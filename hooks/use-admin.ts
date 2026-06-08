@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type {
   AdminUserListItem,
+  AdminPlatformStats,
   CreateUserRequest,
   CreateUserResponse,
   UpdateUserRequest,
@@ -50,5 +51,14 @@ export function useCreateTenant() {
     mutationFn: (data: CreateTenantRequest) =>
       api.post<Tenant>('/api/v1/admin/tenants', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'tenants'] }),
+  })
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: () =>
+      api.get<AdminPlatformStats>('/api/v1/admin/stats').then((r) => r.data),
+    staleTime: 30_000,
   })
 }

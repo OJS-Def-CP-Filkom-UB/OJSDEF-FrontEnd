@@ -16,9 +16,13 @@ const ACTION_OPTIONS = [
   { value: 'user.login_failed', label: 'Login Gagal' },
   { value: 'user.logout', label: 'Logout' },
   { value: 'user.created', label: 'User Dibuat' },
+  { value: 'user.updated', label: 'User Diperbarui' },
+  { value: 'user.deleted', label: 'User Dihapus' },
   { value: 'user.password_changed', label: 'Ganti Password' },
   { value: 'target.created', label: 'Target Dibuat' },
   { value: 'target.verified', label: 'Target Diverifikasi' },
+  { value: 'target.deleted', label: 'Target Dihapus' },
+  { value: 'target.api_key_regenerated', label: 'API Key Diregenerasi' },
   { value: 'scan.started', label: 'Scan Dimulai' },
   { value: 'finding.false_positive_toggled', label: 'Toggle False Positive' },
   { value: 'report.exported', label: 'Laporan Diekspor' },
@@ -31,13 +35,15 @@ export default function AuditLogsPage() {
   const [filterEmail, setFilterEmail] = useState('')
   const [filterAction, setFilterAction] = useState('')
 
-  if (!user) return null  // masih loading
+  // Hook must be called before any conditional returns (React Rules of Hooks).
+  // enabled guard prevents a 403 request while user role is not yet confirmed.
+  const { data, isLoading } = useAuditLogs(params, user?.role === 'saas_admin')
+
+  if (!user) return null
   if (user.role !== 'saas_admin') {
     router.replace('/dashboard')
     return null
   }
-
-  const { data, isLoading } = useAuditLogs(params)
 
   function applyFilters() {
     setParams(p => ({ ...p, page: 1, user_email: filterEmail || undefined, action: filterAction || undefined }))

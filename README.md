@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OJSDef — Frontend Dashboard
 
-## Getting Started
+Dashboard keamanan SaaS untuk platform **OJSDef**, dibangun dengan Next.js 16 App Router.
 
-First, run the development server:
+## Status
+
+**Prototype** — Semua halaman UI sudah diimplementasikan dengan mock data. Integrasi ke backend FastAPI belum dilakukan (next phase).
+
+## Tech Stack
+
+- **Next.js 16.2.3** — App Router, React Server Components
+- **React 19** + **TypeScript**
+- **Tailwind CSS v4** — CSS-first config via `@theme {}` (bukan `tailwind.config.js`)
+- **ShadCN UI** — komponen Radix-based di `components/ui/`
+- **Framer Motion 12** — animasi halaman dan elemen interaktif
+- **NextAuth v5 beta** — Credentials provider, JWT strategy
+- **TanStack Query v5** — server state management
+- **Zod + React Hook Form** — validasi form
+
+## Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev      # Development server — http://localhost:3000
+npm run build    # Production build
+npm run lint     # ESLint check
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Design System
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**"Flat Deep Dark"** — dark mode dengan glassmorphism:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Background: `#020617` (deep slate)
+- Cards: class `glass-dark` atau `bg-slate-900/40 backdrop-blur-sm`
+- Accent primary: Cyan (`text-primary`) — elemen interaktif
+- Accent secondary: Green (`text-secondary`) — success states
 
-## Learn More
+## RBAC (Role-Based Access Control)
 
-To learn more about Next.js, take a look at the following resources:
+| Role | Akses |
+|------|-------|
+| `admin_ojs` | Dashboard, Target OJS, Mulai Scan, Log Teknis, Laporan, Export |
+| `saas_admin` | Semua admin_ojs + Kelola Pengguna + Audit Log platform |
+| `viewer` | Dashboard, Target OJS, Laporan, Export (read-only) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Struktur Halaman
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+├── (auth)/login          — Login (satu-satunya auth entry point)
+├── (dashboard)/
+│   ├── dashboard         — Overview + Quick Insights
+│   ├── targets/          — Daftar, tambah, detail, verifikasi, plugin guide
+│   ├── scanning          — Live scan progress
+│   ├── scan-management   — Log teknis (admin_ojs + saas_admin)
+│   ├── vulnerability-report — Temuan + badge "Positif Palsu" + Action Plan
+│   ├── risk-scoring      — Scoring matrix CVSS v3
+│   ├── export            — Export laporan PDF
+│   ├── users             — Kelola pengguna (saas_admin only)
+│   └── audit-logs        — Audit log platform (saas_admin only)
+```
 
-## Deploy on Vercel
+## Dokumentasi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `CLAUDE.md` — panduan pengembangan, tech stack, RBAC detail
+- `AGENTS.md` — standar frontend, mock data, design system, development patterns
+- `docs/OJSDef_SRS_v1.2.md` — spesifikasi kebutuhan sistem
+- `docs/OJSDef_PRD_v1.2.md` — product requirements
